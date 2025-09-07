@@ -6,6 +6,31 @@ import Help from './Help';
 import About from './About';
 import Resources from './Resources';
 import Contact from './Contact';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 // LocalStorage-based auth helpers
 const USERS_KEY = 'learnlytics_users';
@@ -3590,8 +3615,113 @@ function AcademicPerformancePage() {
   const session = readSession();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedSemester, setSelectedSemester] = useState('current');
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+
+  // Sample academic data
+  const academicData = {
+    currentGPA: 3.8,
+    cumulativeGPA: 3.75,
+    totalCredits: 120,
+    completedCredits: 96,
+    attendanceRate: 95,
+    currentSemester: 'Fall 2024',
+    
+    semesterGPAs: [
+      { semester: 'Fall 2022', gpa: 3.6 },
+      { semester: 'Spring 2023', gpa: 3.7 },
+      { semester: 'Fall 2023', gpa: 3.8 },
+      { semester: 'Spring 2024', gpa: 3.9 },
+      { semester: 'Fall 2024', gpa: 3.8 }
+    ],
+
+    courses: [
+      { name: 'Data Structures', code: 'CS301', credits: 4, grade: 'A', gpa: 4.0, attendance: 98, assignments: 9, quizzes: 8, midterm: 92, final: 88 },
+      { name: 'Algorithms', code: 'CS302', credits: 4, grade: 'A-', gpa: 3.7, attendance: 94, assignments: 8, quizzes: 7, midterm: 85, final: 90 },
+      { name: 'Database Systems', code: 'CS303', credits: 3, grade: 'B+', gpa: 3.3, attendance: 92, assignments: 7, quizzes: 6, midterm: 78, final: 82 },
+      { name: 'Software Engineering', code: 'CS304', credits: 4, grade: 'A', gpa: 4.0, attendance: 96, assignments: 10, quizzes: 9, midterm: 94, final: 91 },
+      { name: 'Computer Networks', code: 'CS305', credits: 3, grade: 'B', gpa: 3.0, attendance: 89, assignments: 6, quizzes: 5, midterm: 75, final: 79 }
+    ],
+
+    weeklyPerformance: [
+      { week: 'Week 1', score: 85 },
+      { week: 'Week 2', score: 88 },
+      { week: 'Week 3', score: 82 },
+      { week: 'Week 4', score: 90 },
+      { week: 'Week 5', score: 87 },
+      { week: 'Week 6', score: 92 },
+      { week: 'Week 7', score: 89 },
+      { week: 'Week 8', score: 94 }
+    ],
+
+    gradeDistribution: {
+      'A': 2,
+      'A-': 1,
+      'B+': 1,
+      'B': 1,
+      'B-': 0,
+      'C+': 0,
+      'C': 0,
+      'D': 0,
+      'F': 0
+    }
+  };
+
+  // Chart configurations
+  const gpaChartData = {
+    labels: academicData.semesterGPAs.map(item => item.semester),
+    datasets: [{
+      label: 'GPA Trend',
+      data: academicData.semesterGPAs.map(item => item.gpa),
+      borderColor: 'rgb(59, 130, 246)',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      tension: 0.4,
+      fill: true
+    }]
+  };
+
+  const performanceChartData = {
+    labels: academicData.weeklyPerformance.map(item => item.week),
+    datasets: [{
+      label: 'Weekly Performance',
+      data: academicData.weeklyPerformance.map(item => item.score),
+      backgroundColor: 'rgba(34, 197, 94, 0.8)',
+      borderColor: 'rgb(34, 197, 94)',
+      borderWidth: 1
+    }]
+  };
+
+  const gradeDistributionData = {
+    labels: Object.keys(academicData.gradeDistribution),
+    datasets: [{
+      data: Object.values(academicData.gradeDistribution),
+      backgroundColor: [
+        '#10B981', '#059669', '#047857', '#065F46',
+        '#FCD34D', '#F59E0B', '#D97706', '#B45309', '#EF4444'
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: selectedSemester === 'gpa' ? 4.0 : 100
+      }
+    }
+  };
 
   return (
     <div className="dashboard-layout">
@@ -3693,22 +3823,672 @@ function AcademicPerformancePage() {
             </button>
             <h1>Academic Performance</h1>
           </div>
+          <div className="header-right">
+            <select 
+              value={selectedSemester} 
+              onChange={(e) => setSelectedSemester(e.target.value)}
+              className="semester-selector"
+            >
+              <option value="current">Current Semester</option>
+              <option value="all">All Semesters</option>
+              <option value="fall2024">Fall 2024</option>
+              <option value="spring2024">Spring 2024</option>
+            </select>
+          </div>
         </div>
 
         <div className="dashboard-container">
+          {/* Key Metrics */}
           <div className="dashboard-section">
-            <h2>Academic Performance Overview</h2>
-            <div className="performance-metrics">
-              <div className="metric-card">
-                <h3>Overall GPA</h3>
-                <p>3.8/4.0</p>
+            <div className="performance-metrics-grid">
+              <div className="metric-card primary">
+                <div className="metric-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 20V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 20V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 20V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="metric-content">
+                  <h3>Current GPA</h3>
+                  <p className="metric-value">{academicData.currentGPA}/4.0</p>
+                  <span className="metric-change positive">+0.1 from last semester</span>
+                </div>
               </div>
-              <div className="metric-card">
-                <h3>Attendance Rate</h3>
-                <p>95%</p>
+
+              <div className="metric-card secondary">
+                <div className="metric-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div className="metric-content">
+                  <h3>Cumulative GPA</h3>
+                  <p className="metric-value">{academicData.cumulativeGPA}/4.0</p>
+                  <span className="metric-change positive">Excellent standing</span>
+                </div>
+              </div>
+
+              <div className="metric-card success">
+                <div className="metric-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M23 21V19C23 18.1645 22.7155 17.3541 22.2094 16.7006C21.7033 16.047 20.9999 15.5904 20.2 15.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="metric-content">
+                  <h3>Attendance Rate</h3>
+                  <p className="metric-value">{academicData.attendanceRate}%</p>
+                  <span className="metric-change positive">Above average</span>
+                </div>
+              </div>
+
+              <div className="metric-card info">
+                <div className="metric-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19.5C4 18.1193 5.11929 17 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6.5 2H20V22H6.5C5.11929 22 4 20.8807 4 19.5V4.5C4 3.11929 5.11929 2 6.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="metric-content">
+                  <h3>Credits Progress</h3>
+                  <p className="metric-value">{academicData.completedCredits}/{academicData.totalCredits}</p>
+                  <span className="metric-change neutral">80% completed</span>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Charts Section */}
+          <div className="dashboard-section">
+            <div className="charts-grid">
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>GPA Trend</h3>
+                  <p>Semester-wise GPA progression</p>
+                </div>
+                <div className="chart-container">
+                  <Line data={gpaChartData} options={chartOptions} />
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>Weekly Performance</h3>
+                  <p>Current semester performance</p>
+                </div>
+                <div className="chart-container">
+                  <Bar data={performanceChartData} options={chartOptions} />
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>Grade Distribution</h3>
+                  <p>Current semester grades</p>
+                </div>
+                <div className="chart-container">
+                  <Doughnut data={gradeDistributionData} options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'right',
+                      },
+                    }
+                  }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Course Details */}
+          <div className="dashboard-section">
+            <div className="section-header">
+              <h2>📚 Current Courses ({academicData.courses.length})</h2>
+              <div className="header-actions">
+                <button className="btn-secondary">📊 Compare Courses</button>
+                <button className="btn-primary">📄 Export Report</button>
+              </div>
+            </div>
+            
+            <div className="courses-table-container">
+              <table className="courses-table">
+                <thead>
+                  <tr>
+                    <th className="course-col">Course Details</th>
+                    <th className="credits-col">Credits</th>
+                    <th className="grade-col">Current Grade</th>
+                    <th className="gpa-col">GPA Points</th>
+                    <th className="attendance-col">Attendance</th>
+                    <th className="progress-col">Progress</th>
+                    <th className="actions-col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {academicData.courses.map((course, index) => (
+                    <tr key={index} className="course-row">
+                      <td className="course-info-cell">
+                        <div className="course-details">
+                          <div className="course-icon">
+                            {course.name === 'Data Structures' ? '🏗️' :
+                             course.name === 'Algorithms' ? '🧮' :
+                             course.name === 'Database Systems' ? '🗄️' :
+                             course.name === 'Software Engineering' ? '⚙️' :
+                             course.name === 'Computer Networks' ? '🌐' : '📖'}
+                          </div>
+                          <div className="course-text">
+                            <h4 className="course-name">{course.name}</h4>
+                            <p className="course-code">{course.code}</p>
+                            <span className="course-status">
+                              {course.grade === 'A' ? '🌟 Excellent' :
+                               course.grade.includes('A') ? '✅ Very Good' :
+                               course.grade.includes('B') ? '👍 Good' : '⚠️ Needs Focus'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td className="credits-cell">
+                        <div className="credits-info">
+                          <span className="credits-number">{course.credits}</span>
+                          <span className="credits-label">credits</span>
+                        </div>
+                      </td>
+                      
+                      <td className="grade-cell">
+                        <div className="grade-container">
+                          <span className={`grade-badge ${course.grade.toLowerCase().replace(/[+-]/g, '')}`}>
+                            {course.grade}
+                          </span>
+                          <div className="grade-trend">
+                            {course.gpa >= 3.7 ? '📈' : course.gpa >= 3.0 ? '➡️' : '📉'}
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td className="gpa-cell">
+                        <div className="gpa-info">
+                          <span className="gpa-value">{course.gpa.toFixed(1)}</span>
+                          <span className="gpa-max">/4.0</span>
+                        </div>
+                      </td>
+                      
+                      <td className="attendance-cell">
+                        <div className="attendance-container">
+                          <div className="attendance-bar">
+                            <div 
+                              className={`attendance-fill ${course.attendance >= 95 ? 'excellent' : course.attendance >= 90 ? 'good' : 'warning'}`}
+                              style={{ width: `${course.attendance}%` }}
+                            ></div>
+                          </div>
+                          <span className="attendance-text">{course.attendance}%</span>
+                        </div>
+                      </td>
+                      
+                      <td className="progress-cell">
+                        <div className="progress-info">
+                          <div className="progress-item">
+                            <span className="progress-label">Assignments:</span>
+                            <span className="progress-value">{course.assignments}/10</span>
+                          </div>
+                          <div className="progress-item">
+                            <span className="progress-label">Quizzes:</span>
+                            <span className="progress-value">{course.quizzes}/10</span>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td className="actions-cell">
+                        <div className="action-buttons">
+                          <button 
+                            className="btn-outline small"
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setShowDetailModal(true);
+                            }}
+                            title="View detailed performance"
+                          >
+                            📊 Details
+                          </button>
+                          <button 
+                            className="btn-ghost small"
+                            onClick={() => alert(`Study resources for ${course.name} will be available soon!`)}
+                            title="Access study materials"
+                          >
+                            📚 Resources
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="table-summary">
+              <div className="summary-stats">
+                <div className="stat-item">
+                  <span className="stat-icon">🎯</span>
+                  <span className="stat-text">Average GPA: <strong>{(academicData.courses.reduce((sum, course) => sum + course.gpa, 0) / academicData.courses.length).toFixed(2)}</strong></span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-icon">📊</span>
+                  <span className="stat-text">Total Credits: <strong>{academicData.courses.reduce((sum, course) => sum + course.credits, 0)}</strong></span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-icon">📈</span>
+                  <span className="stat-text">Average Attendance: <strong>{Math.round(academicData.courses.reduce((sum, course) => sum + course.attendance, 0) / academicData.courses.length)}%</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Insights */}
+          <div className="dashboard-section">
+            <div className="section-header">
+              <h2>🧠 AI-Powered Performance Insights</h2>
+              <div className="insights-filter">
+                <button className="filter-btn active">All Insights</button>
+                <button className="filter-btn">Strengths</button>
+                <button className="filter-btn">Areas to Improve</button>
+              </div>
+            </div>
+            
+            <div className="insights-container">
+              <div className="insights-summary">
+                <div className="summary-card">
+                  <div className="summary-icon">📊</div>
+                  <div className="summary-text">
+                    <h4>Overall Assessment</h4>
+                    <p>Strong academic performance with room for targeted improvements</p>
+                  </div>
+                  <div className="summary-score">
+                    <span className="score-value">8.2</span>
+                    <span className="score-label">/10</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="insights-grid">
+                <div className="insight-card positive">
+                  <div className="insight-header">
+                    <div className="insight-icon">🌟</div>
+                    <div className="insight-badge success">Strength</div>
+                  </div>
+                  <div className="insight-content">
+                    <h4>Excellent Academic Progress</h4>
+                    <p>Your GPA has improved by <strong>0.1 points</strong> this semester. Outstanding performance in Data Structures (A) and Software Engineering (A).</p>
+                    <div className="insight-actions">
+                      <span className="action-tag">✅ Keep current study habits</span>
+                      <span className="action-tag">📚 Consider advanced topics</span>
+                    </div>
+                  </div>
+                  <div className="insight-impact">
+                    <span className="impact-label">Impact:</span>
+                    <div className="impact-bar positive"></div>
+                    <span className="impact-text">High</span>
+                  </div>
+                </div>
+                
+                <div className="insight-card warning">
+                  <div className="insight-header">
+                    <div className="insight-icon">⚠️</div>
+                    <div className="insight-badge warning">Action Required</div>
+                  </div>
+                  <div className="insight-content">
+                    <h4>Attendance Concern</h4>
+                    <p>Computer Networks attendance is <strong>89%</strong> (below 90% threshold). Missing classes may impact your understanding and final grade.</p>
+                    <div className="insight-actions">
+                      <span className="action-tag">🎯 Attend next 3 classes</span>
+                      <span className="action-tag">📝 Review missed material</span>
+                    </div>
+                  </div>
+                  <div className="insight-impact">
+                    <span className="impact-label">Risk:</span>
+                    <div className="impact-bar warning"></div>
+                    <span className="impact-text">Medium</span>
+                  </div>
+                </div>
+                
+                <div className="insight-card info">
+                  <div className="insight-header">
+                    <div className="insight-icon">📈</div>
+                    <div className="insight-badge info">Opportunity</div>
+                  </div>
+                  <div className="insight-content">
+                    <h4>Grade Improvement Potential</h4>
+                    <p>Database Systems (B+) shows potential for improvement to A-level. Focus on upcoming assignments and final exam preparation.</p>
+                    <div className="insight-actions">
+                      <span className="action-tag">📖 Extra study sessions</span>
+                      <span className="action-tag">👥 Join study group</span>
+                    </div>
+                  </div>
+                  <div className="insight-impact">
+                    <span className="impact-label">Potential:</span>
+                    <div className="impact-bar info"></div>
+                    <span className="impact-text">High</span>
+                  </div>
+                </div>
+
+                <div className="insight-card neutral">
+                  <div className="insight-header">
+                    <div className="insight-icon">🎯</div>
+                    <div className="insight-badge neutral">Recommendation</div>
+                  </div>
+                  <div className="insight-content">
+                    <h4>Study Pattern Analysis</h4>
+                    <p>Your performance peaks during <strong>Week 6-8</strong> of each semester. Consider maintaining consistent study schedules throughout.</p>
+                    <div className="insight-actions">
+                      <span className="action-tag">⏰ Schedule regular study blocks</span>
+                      <span className="action-tag">📅 Use calendar reminders</span>
+                    </div>
+                  </div>
+                  <div className="insight-impact">
+                    <span className="impact-label">Benefit:</span>
+                    <div className="impact-bar neutral"></div>
+                    <span className="impact-text">Medium</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="insights-footer">
+                <div className="next-review">
+                  <span className="review-icon">🔄</span>
+                  <span>Next AI analysis: <strong>December 15, 2024</strong></span>
+                </div>
+                <button className="btn-outline">📋 View Detailed Analysis</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Academic Goals */}
+          <div className="dashboard-section">
+            <div className="section-header">
+              <h2>🎯 Academic Goals & Milestones</h2>
+              <div className="goals-actions">
+                <button className="btn-ghost">📝 Set New Goal</button>
+                <button className="btn-secondary">📊 View Progress History</button>
+              </div>
+            </div>
+            
+            <div className="goals-overview">
+              <div className="goals-summary">
+                <div className="summary-metric">
+                  <span className="metric-number">3</span>
+                  <span className="metric-label">Active Goals</span>
+                </div>
+                <div className="summary-metric">
+                  <span className="metric-number">1</span>
+                  <span className="metric-label">Achieved</span>
+                </div>
+                <div className="summary-metric">
+                  <span className="metric-number">2</span>
+                  <span className="metric-label">In Progress</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="goals-grid">
+              <div className="goal-card priority-high">
+                <div className="goal-header">
+                  <div className="goal-title">
+                    <div className="goal-icon">📈</div>
+                    <div>
+                      <h4>Semester GPA Target</h4>
+                      <p className="goal-description">Achieve 3.9 GPA by end of Fall 2024</p>
+                    </div>
+                  </div>
+                  <span className="goal-status in-progress">In Progress</span>
+                </div>
+                
+                <div className="goal-metrics">
+                  <div className="metric-row">
+                    <span className="metric-label">Current:</span>
+                    <span className="metric-value current">3.8 GPA</span>
+                  </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Target:</span>
+                    <span className="metric-value target">3.9 GPA</span>
+                  </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Needed:</span>
+                    <span className="metric-value needed">+0.1 points</span>
+                  </div>
+                </div>
+
+                <div className="goal-progress">
+                  <div className="progress-header">
+                    <span className="progress-label">Progress</span>
+                    <span className="progress-percentage">85%</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill in-progress" style={{ width: '85%' }}></div>
+                  </div>
+                </div>
+
+                <div className="goal-actions">
+                  <div className="next-steps">
+                    <h5>Next Steps:</h5>
+                    <ul>
+                      <li>Focus on Database Systems final exam</li>
+                      <li>Complete all remaining assignments</li>
+                    </ul>
+                  </div>
+                  <div className="goal-timeline">
+                    <span className="timeline-icon">⏰</span>
+                    <span>Due: December 20, 2024</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="goal-card priority-medium achieved">
+                <div className="goal-header">
+                  <div className="goal-title">
+                    <div className="goal-icon">✅</div>
+                    <div>
+                      <h4>Attendance Excellence</h4>
+                      <p className="goal-description">Maintain 90%+ attendance rate</p>
+                    </div>
+                  </div>
+                  <span className="goal-status achieved">Achieved</span>
+                </div>
+                
+                <div className="goal-metrics">
+                  <div className="metric-row">
+                    <span className="metric-label">Current:</span>
+                    <span className="metric-value current">95%</span>
+                  </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Target:</span>
+                    <span className="metric-value target">90%</span>
+                  </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Exceeded by:</span>
+                    <span className="metric-value exceeded">+5%</span>
+                  </div>
+                </div>
+
+                <div className="goal-progress">
+                  <div className="progress-header">
+                    <span className="progress-label">Progress</span>
+                    <span className="progress-percentage">100%</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill achieved" style={{ width: '100%' }}></div>
+                  </div>
+                </div>
+
+                <div className="goal-actions">
+                  <div className="achievement-badge">
+                    <span className="badge-icon">🏆</span>
+                    <span>Goal Exceeded!</span>
+                  </div>
+                  <div className="goal-timeline">
+                    <span className="timeline-icon">✅</span>
+                    <span>Achieved: November 15, 2024</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="goal-card priority-medium">
+                <div className="goal-header">
+                  <div className="goal-title">
+                    <div className="goal-icon">🎓</div>
+                    <div>
+                      <h4>Degree Progress</h4>
+                      <p className="goal-description">Complete 120 credit hours for graduation</p>
+                    </div>
+                  </div>
+                  <span className="goal-status on-track">On Track</span>
+                </div>
+                
+                <div className="goal-metrics">
+                  <div className="metric-row">
+                    <span className="metric-label">Completed:</span>
+                    <span className="metric-value current">96 credits</span>
+                  </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Total Required:</span>
+                    <span className="metric-value target">120 credits</span>
+                  </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Remaining:</span>
+                    <span className="metric-value needed">24 credits</span>
+                  </div>
+                </div>
+
+                <div className="goal-progress">
+                  <div className="progress-header">
+                    <span className="progress-label">Progress</span>
+                    <span className="progress-percentage">80%</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill on-track" style={{ width: '80%' }}></div>
+                  </div>
+                </div>
+
+                <div className="goal-actions">
+                  <div className="next-steps">
+                    <h5>Remaining:</h5>
+                    <ul>
+                      <li>2 semesters (Spring & Fall 2025)</li>
+                      <li>12 credits per semester</li>
+                    </ul>
+                  </div>
+                  <div className="goal-timeline">
+                    <span className="timeline-icon">🎯</span>
+                    <span>Expected: May 2025</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="goals-footer">
+              <div className="motivation-section">
+                <div className="motivation-card">
+                  <div className="motivation-icon">💪</div>
+                  <div className="motivation-content">
+                    <h4>Keep Going!</h4>
+                    <p>You're making excellent progress. Stay focused on your goals and maintain the momentum!</p>
+                  </div>
+                  <div className="motivation-stats">
+                    <div className="stat">
+                      <span className="stat-value">85%</span>
+                      <span className="stat-label">Overall Progress</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Course Detail Modal */}
+          {showDetailModal && selectedCourse && (
+            <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+              <div className="modal-content course-detail-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>{selectedCourse.name} - Detailed Performance</h3>
+                  <button className="modal-close" onClick={() => setShowDetailModal(false)}>×</button>
+                </div>
+                <div className="modal-body">
+                  <div className="course-detail-grid">
+                    <div className="detail-section">
+                      <h4>Course Information</h4>
+                      <div className="detail-item">
+                        <span>Course Code:</span>
+                        <span>{selectedCourse.code}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Credits:</span>
+                        <span>{selectedCourse.credits}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Current Grade:</span>
+                        <span className={`grade-badge ${selectedCourse.grade.toLowerCase().replace(/[+-]/g, '')}`}>
+                          {selectedCourse.grade}
+                        </span>
+                      </div>
+                      <div className="detail-item">
+                        <span>GPA Points:</span>
+                        <span>{selectedCourse.gpa.toFixed(1)}</span>
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Performance Breakdown</h4>
+                      <div className="detail-item">
+                        <span>Assignments Completed:</span>
+                        <span>{selectedCourse.assignments}/10</span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Quizzes Completed:</span>
+                        <span>{selectedCourse.quizzes}/10</span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Midterm Score:</span>
+                        <span>{selectedCourse.midterm}%</span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Final Score:</span>
+                        <span>{selectedCourse.final}%</span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Attendance:</span>
+                        <span>{selectedCourse.attendance}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="course-recommendations">
+                    <h4>Recommendations</h4>
+                    <ul>
+                      {selectedCourse.grade === 'A' ? (
+                        <li>Excellent performance! Continue your current study approach.</li>
+                      ) : selectedCourse.grade.includes('B') ? (
+                        <li>Good work! Focus on improving weak areas to reach A-level performance.</li>
+                      ) : (
+                        <li>Consider additional study time and resources to improve your grade.</li>
+                      )}
+                      {selectedCourse.attendance < 95 && (
+                        <li>Improve attendance to better understand course material.</li>
+                      )}
+                      <li>Utilize office hours for additional support and clarification.</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn-primary" onClick={() => setShowDetailModal(false)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
