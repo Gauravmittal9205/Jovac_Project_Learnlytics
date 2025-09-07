@@ -1,0 +1,467 @@
+import React, { useState, useRef, useEffect } from 'react';
+import './App.css';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import NavIcons from './NavIcons';
+import Help from './Help';
+import About from './About';
+import Resources from './Resources';
+import Contact from './Contact';
+import OverviewPage from './components/OverviewPage';
+
+// LocalStorage-based auth helpers
+const USERS_KEY = 'learnlytics_users';
+const SESSION_KEY = 'learnlytics_session';
+
+function readUsersFromStorage() {
+  try { 
+    const raw = localStorage.getItem(USERS_KEY); 
+    return raw ? JSON.parse(raw) : []; 
+  } catch { 
+    return []; 
+  }
+}
+
+function writeUsersToStorage(users) { 
+  localStorage.setItem(USERS_KEY, JSON.stringify(users)); 
+}
+
+function readSession() {
+  try { 
+    const raw = localStorage.getItem(SESSION_KEY); 
+    return raw ? JSON.parse(raw) : null; 
+  } catch { 
+    return null; 
+  }
+}
+
+function writeSession(session) { 
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session)); 
+}
+
+function clearSession() { 
+  localStorage.removeItem(SESSION_KEY); 
+}
+
+// Auth components
+function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const users = readUsersFromStorage();
+    const user = users.find(u => u.email === email && u.password === password);
+    
+    if (user) {
+      writeSession({ email: user.email, name: user.name });
+      navigate('/overview');
+    } else {
+      setError('Invalid email or password');
+    }
+  };
+
+  return (
+    <div className="auth-page">
+      <div className="auth-container">
+        <h2>Welcome Back</h2>
+        <p className="subtitle">Sign in to continue to Learnlytics</p>
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-options">
+            <label className="remember-me">
+              <input type="checkbox" /> Remember me
+            </label>
+            <a href="/forgot" className="forgot-password">Forgot password?</a>
+          </div>
+          
+          <button type="submit" className="btn primary">Sign In</button>
+          
+          <p className="signup-link">
+            Don't have an account? <a href="/register">Sign up</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function RegisterPage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+    
+    const users = readUsersFromStorage();
+    
+    if (users.some(u => u.email === email)) {
+      setError('Email already registered');
+      return;
+    }
+    
+    const newUser = { name, email, password };
+    writeUsersToStorage([...users, newUser]);
+    writeSession({ email, name });
+    navigate('/overview');
+  };
+
+  return (
+    <div className="auth-page">
+      <div className="auth-container">
+        <h2>Create Account</h2>
+        <p className="subtitle">Get started with Learnlytics</p>
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength="6"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <button type="submit" className="btn primary">Create Account</button>
+          
+          <p className="signup-link">
+            Already have an account? <a href="/login">Sign in</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ForgotPasswordPage() {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      setMessage('If an account exists with that email, you will receive a password reset link.');
+    }, 1500);
+  };
+
+  return (
+    <div className="auth-page">
+      <div className="auth-container">
+        <h2>Reset Password</h2>
+        <p className="subtitle">Enter your email to receive a reset link</p>
+        
+        {error && <div className="error-message">{error}</div>}
+        {message && <div className="success-message">{message}</div>}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => setError('')}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className={`btn primary ${isLoading ? 'loading' : ''}`} 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Sending...' : 'Send Reset Link'}
+          </button>
+          
+          <p className="signup-link">
+            Remember your password? <a href="/login">Sign in</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Individual Page Components for Sidebar Navigation
+function OverviewPageWrapper() {
+  const session = readSession();
+  return <OverviewPage session={session} />;
+}
+
+function RiskStatusPage() {
+  const session = readSession();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => { 
+    if (!session) navigate('/login'); 
+  }, [navigate, session]);
+
+  return (
+    <div className="dashboard-layout">
+      {/* Sidebar */}
+      <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <div className="logo-shield">L</div>
+            <span className="brand-text">Learnlytics</span>
+          </div>
+          <button 
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? '←' : '→'}
+          </button>
+        </div>
+        
+        <div className="sidebar-profile">
+          <div className="profile-avatar">
+            {(session?.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase()}
+          </div>
+          <div className="profile-info">
+            <h4>{session?.name || 'Student'}</h4>
+            <p>Student</p>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <h5>Main</h5>
+            <Link to="/overview" className="nav-item">
+              <span className="nav-text">Overview</span>
+            </Link>
+            <Link to="/risk-status" className="nav-item active">
+              <span className="nav-text">Risk Status</span>
+            </Link>
+            <Link to="/profile" className="nav-item">
+              <span className="nav-text">Profile</span>
+            </Link>
+          </div>
+          
+          <div className="nav-section">
+            <h5>Academic</h5>
+            <Link to="/my-instructors" className="nav-item">
+              <span className="nav-text">My Instructors</span>
+            </Link>
+            <Link to="/schedule" className="nav-item">
+              <span className="nav-text">Schedule</span>
+            </Link>
+            <Link to="/course-analysis" className="nav-item">
+              <span className="nav-text">Course Analysis</span>
+            </Link>
+            <Link to="/academic-performance" className="nav-item">
+              <span className="nav-text">Academic Performance</span>
+            </Link>
+          </div>
+          
+          <div className="nav-section">
+            <h5>Tools</h5>
+            <Link to="/feedback" className="nav-item">
+              <span className="nav-text">Feedback</span>
+            </Link>
+            <Link to="/resources" className="nav-item">
+              <span className="nav-text">Resources</span>
+            </Link>
+            <Link to="/weekly-report" className="nav-item">
+              <span className="nav-text">Weekly Report</span>
+            </Link>
+          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <button 
+            className="logout-btn"
+            onClick={() => {
+              clearSession();
+              navigate('/');
+            }}
+          >
+            <span className="nav-text">Logout</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className={`dashboard-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <div className="dashboard-header">
+          <div className="header-left">
+            <button 
+              className="mobile-sidebar-toggle"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              <span className="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
+            </button>
+            <h1>Risk Status</h1>
+          </div>
+          <div className="header-right">
+            <div className="header-stats">
+              <span className="stat-item">
+                <span className="stat-value">78%</span>
+                <span className="stat-label">Engagement</span>
+              </span>
+              <span className="stat-item">
+                <span className="stat-value">Medium</span>
+                <span className="stat-label">Risk Level</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboard-container">
+          <div className="risk-status-container">
+            <div className="risk-level-card">
+              <h2>Your Current Risk Level</h2>
+              <div className="risk-meter">
+                <div className="risk-level low">Low</div>
+                <div className="risk-level medium active">Medium</div>
+                <div className="risk-level high">High</div>
+              </div>
+              <div className="risk-description">
+                <p>Your engagement level is moderate. You're on track but could benefit from more consistent participation.</p>
+              </div>
+            </div>
+
+            <div className="risk-factors">
+              <h3>Risk Factors</h3>
+              <div className="risk-factor">
+                <div className="risk-factor-header">
+                  <span className="risk-factor-title">Assignment Submission</span>
+                  <span className="risk-factor-status warning">At Risk</span>
+                </div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: '65%' }}></div>
+                </div>
+                <p>You've submitted 65% of assignments on time. Try to submit all assignments by their due dates.</p>
+              </div>
+
+              <div className="risk-factor">
+                <div className="risk-factor-header">
+                  <span className="risk-factor-title">Class Participation</span>
+                  <span className="risk-factor-status good">Good</span>
+                </div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: '85%' }}></div>
+                </div>
+                <p>Your participation rate is 85%. Keep up the good work!</p>
+              </div>
+
+              <div className="risk-factor">
+                <div className="risk-factor-header">
+                  <span className="risk-factor-title">Quiz Performance</span>
+                  <span className="risk-factor-status warning">Needs Attention</span>
+                </div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: '58%' }}></div>
+                </div>
+                <p>Your average quiz score is 58%. Consider reviewing the material and seeking help if needed.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Add other page components here...
+
+function App() {
+  return (
+    <div className="App">
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot" element={<ForgotPasswordPage />} />
+        <Route path="/icons" element={<NavIcons />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/resources" element={<Resources />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/help" element={<Help />} />
+        <Route path="/overview" element={<OverviewPageWrapper />} />
+        <Route path="/risk-status" element={<RiskStatusPage />} />
+        {/* Add other routes as needed */}
+      </Routes>
+    </div>
+  );
+}
+
+export default App;
