@@ -123,7 +123,7 @@ function Home(){
           <div className="hero-copy reveal">
             <h1>Protect Student Success with Smart Analytics</h1>
             <p>
-              Simple tools for instructors to monitor engagement, predict dropout risk,
+              Simple tool for instructors to monitor engagement, predict dropout risk,
               and deliver personalized learning at scale.
             </p>
             <div className="hero-cta">
