@@ -294,91 +294,6 @@ const Stat = styled.div`
   }
 `;
 
-// Our Story Section
-const StorySectionContainer = styled(SectionContainer)`
-  background-color: #e2e8f0;
-`;
-
-const StoryTimeline = styled.div`
-  position: relative;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem 0;
-
-  &:before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    height: 100%;
-    width: 2px;
-    background: #cbd5e0;
-    transform: translateX(-50%);
-  }
-
-  @media (max-width: 767px) {
-    &:before {
-      left: 1.5rem;
-    }
-  }
-`;
-
-const StoryItem = styled.div`
-  position: relative;
-  margin-bottom: 2rem;
-  padding: 1rem 2rem;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  text-align: left;
-  
-  &:after {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #48bb78;
-    border: 2px solid #2f855a;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1;
-  }
-
-  @media (min-width: 768px) {
-    &:nth-child(odd) {
-      margin-left: -400px;
-      text-align: right;
-    }
-
-    &:nth-child(even) {
-      margin-left: 400px;
-    }
-
-    &:nth-child(odd):after {
-      left: calc(50% - 8px);
-    }
-    
-    &:nth-child(even):after {
-      left: calc(50% - 8px);
-    }
-  }
-
-  @media (max-width: 767px) {
-    padding-left: 3.5rem;
-    &:after {
-      left: 0.75rem;
-    }
-  }
-`;
-
-const StoryYear = styled.div`
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #2c5282;
-  margin-bottom: 0.5rem;
-`;
-
 // Meet the Team Section
 const TeamGrid = styled.div`
   display: grid;
@@ -558,10 +473,9 @@ function WhyItem({ icon, title, text, proof }) {
 }
 
 const teamMembers = [
-  { name: 'Dr. Priya Sharma', title: 'Co-Founder & CEO', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=1200&auto=format&fit=crop' },
-  { name: 'Sameer Gupta', title: 'Chief Product Officer', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1200&auto=format&fit=crop' },
-  { name: 'Kavita Singh', title: 'Lead Data Scientist', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29329?q=80&w=1200&auto=format&fit=crop' },
-  { name: 'Rohan Joshi', title: 'Head of Customer Success', img: 'https://images.unsplash.com/photo-1544723795-3fb6469e38e5?q=80&w=1200&auto=format&fit=crop' },
+  { name: 'Anushree Agrawal', title: 'Co-Founder & CEO', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=1200&auto=format&fit=crop' },
+  { name: 'Gaurav Mittal', title: 'Chief Product Officer', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1200&auto=format&fit=crop' },
+  { name: 'Harshit Bhardwaj', title: 'Lead Data Scientist', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29329?q=80&w=1200&auto=format&fit=crop' },
 ];
 
 const testimonials = [
