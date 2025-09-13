@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate,useParams  } from 'react-router-dom';
 import NavIcons from './NavIcons';
 import Help from './Help';
 import About from './About';
 import Resources from './Resources';
+
 import {
   RadialBarChart,
   RadialBar,
   PolarAngleAxis,
+  LineChart, 
+  Line,
   BarChart,
   Bar,
   XAxis,
@@ -95,7 +98,7 @@ function App() {
         <Route path="/resources" element={<Resources />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<Help />} />
-        <Route path="/dashboard-student" element={<StudentDashboard />} />
+        <Route path="/dashboard-student" element={<OverviewPage />} />
         <Route path="/dashboard-instructor" element={<InstructorDashboard />} />
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/weekly-report" element={<WeeklyReport />} />
@@ -103,11 +106,13 @@ function App() {
         <Route path="/risk-status" element={<RiskStatusPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/my-instructors" element={<MyInstructorsPage />} />
+        <Route path="/recommendation/:topic" element={<RecommendationPage />} />
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/course-analysis" element={<CourseAnalysisPage />} />
         <Route path="/academic-performance" element={<AcademicPerformancePage />} />
         <Route path="/my-students" element={<MyStudentsPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/insoverview" element={<InstructorDashboard />} />
       </Routes>
     </div>
   );
@@ -1730,6 +1735,7 @@ function OverviewPage() {
       },
     ],
   };
+  
 
   const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
   const Colors = ["#8b5cf6"];
@@ -1973,7 +1979,14 @@ function OverviewPage() {
                   <div className="rec-content">
                     <h4>{rec.title}</h4>
                     <p>{rec.reason}</p>
-                    <button className="btn primary small">Start Now</button>
+                    <button
+  className="btn primary small"
+  onClick={() =>
+    navigate(`/recommendation/${rec.title.replace(/\s+/g, "-").toLowerCase()}`)
+  }
+>
+  Start Now
+</button>
                   </div>
                 </div>
               ))}
@@ -1985,7 +1998,103 @@ function OverviewPage() {
   );
 }
 
+const recommendationContent = {
+  "advanced-algorithms": {
+    title: "Advanced Algorithms",
+    description: "Dive deeper into algorithm design patterns and problem-solving strategies.",
+    cardData: [
+      { count: "25", label: "Lessons", color: "#E0F2FE" },
+      { count: "12", label: "Videos", color: "#EBFBEE" },
+      { count: "30", label: "Quizzes", color: "#FEF7E6" },
+      { count: "8", label: "Challenges", color: "#FDEFEF" },
+    ],
+    listData: [
+      { title: "Binary Search Mastery", description: "Lesson on core concepts, iterative, and recursive implementations." },
+      { title: "Dynamic Programming 101", description: "Video series on breaking down complex problems with memoization." },
+      { title: "Graph Traversal Quiz", description: "Test your knowledge on DFS and BFS with multiple-choice questions." },
+    ]
+  },
+  "database-design": {
+    title: "Database Design",
+    description: "Learn ER diagrams, normalization, and indexing for efficient DBMS design.",
+    cardData: [
+      { count: "15", label: "ER Diagrams", color: "#F0F0FF" },
+      { count: "20", label: "Normalization", color: "#E9F5FF" },
+      { count: "10", label: "Indexing", color: "#FFF0E5" },
+      { count: "5", label: "Case Studies", color: "#E6F6E6" },
+    ],
+    listData: [
+      { title: "Relational Schema Design", description: "Practice problems for building efficient and scalable databases." },
+      { title: "SQL Query Optimization", description: "Video guide on writing performant queries and using indexes." },
+      { title: "NoSQL vs SQL Quiz", description: "A quick quiz to test your understanding of different database types." },
+    ]
+  },
+  "math-problem-sets": {
+    title: "Math Problem Sets",
+    description: "Practice challenging problems to maintain your mathematical edge.",
+    cardData: [
+      { count: "50+", label: "Algebra", color: "#E0F2FE" },
+      { count: "30+", label: "Geometry", color: "#EBFBEE" },
+      { count: "40+", label: "Calculus", color: "#FEF7E6" },
+      { count: "20+", label: "Probability", color: "#FDEFEF" },
+    ],
+    listData: [
+      { title: "Advanced Algebra Problems", description: "A set of challenging equations and inequalities with step-by-step solutions." },
+      { title: "Trigonometry Masterclass", description: "Video lessons on identities and applications in various fields." },
+      { title: "Logic & Puzzles Quiz", description: "Brain teasers and logic puzzles to sharpen your critical thinking." },
+    ]
+  },
+};
 
+
+function RecommendationPage() {
+  const { topic } = useParams();
+  const data = recommendationContent[topic];
+  useEffect(() => {
+    // Scrolls to the top of the page smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [topic]);
+
+  if (!data) {
+    return (
+      <div className="p-6 max-w-3xl mx-auto text-center">
+        <h1 className="text-3xl font-bold mb-4">Not Found</h1>
+        <p className="text-gray-600 mb-6">The selected recommendation does not exist. Please go back.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="recommendation-page p-6 max-w-5xl mx-auto">
+      <div className="header-section">
+        <h1 className="text-4xl font-extrabold text-gray-800">{data.title}</h1>
+        <p className="text-lg text-gray-600 mt-2">{data.description}</p>
+      </div>
+      
+      <div className="card-section mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+        {data.cardData.map((card, index) => (
+          <div key={index} className="card-item bg-white p-6 rounded-2xl shadow-md flex flex-col items-start" style={{ backgroundColor: card.color }}>
+            <span className="text-4xl font-bold text-gray-800 mb-1">{card.count}</span>
+            <span className="text-gray-600 text-sm font-semibold">{card.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="content-section mt-12">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Learning Resources</h2>
+        <div className="list-container">
+          {data.listData.map((item, index) => (
+            <div key={index} className="resource-item bg-white p-6 rounded-xl shadow-sm mb-4">
+              <h3 className="text-xl font-semibold text-gray-700">{item.title}</h3>
+              <p className="text-gray-500 mt-2">{item.description}</p>
+              <button className="mt-4 px-6 py-2 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition-colors">Start Now</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 function RiskStatusPage() {
@@ -1994,6 +2103,41 @@ function RiskStatusPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+  const RiskAnalysisData = {
+    data : [
+  { name: 'Week 1', value: 25 },
+  { name: 'Week 2', value: 20 },
+  { name: 'Week 3', value: 15 },
+  { name: 'Week 4', value: 18 },
+  { name: 'Week 5', value: 15 },
+]
+  };
+  const historicalData = {
+  summary: [
+    { title: "Average Risk Level", value: "18%", colorClass: "low-risk" },
+    { title: "Highest Risk Period", value: "Week 2 (25%)", colorClass: "high-risk" },
+    { title: "Risk Improvement", value: "-10%", colorClass: "positive" },
+    { title: "Interventions Used", value: "2", colorClass: "" },
+  ],
+  timeline: [
+    { week: "Week 1", risk: "25% Risk", note: "Initial assessment" },
+    { week: "Week 2", risk: "20% Risk", note: "Improved attendance" },
+    { week: "Week 3", risk: "15% Risk", note: "Better quiz scores" },
+    { week: "Week 4", risk: "18% Risk", note: "Assignment delay" },
+    { week: "Week 5", risk: "15% Risk", note: "Current status" },
+  ]
+};
+  const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="label">{`${label}`}</p>
+        <p className="value">{`Risk: ${payload[0].value}%`}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
   return (
     <div className="dashboard-layout">
@@ -2142,42 +2286,43 @@ function RiskStatusPage() {
           <div className="dashboard-section">
             <h2>Risk Analysis Breakdown</h2>
             <div className="risk-charts-grid">
-              <div className="chart-card">
-                <h3>Risk Trend Over Time</h3>
-                <div className="risk-trend-chart">
-                  <div className="chart-container">
-                    <div className="trend-line">
-                      <div className="trend-point" style={{left: '10%', bottom: '20%'}}>
-                        <div className="point-value">25%</div>
-                        <div className="point-dot"></div>
-                      </div>
-                      <div className="trend-point" style={{left: '30%', bottom: '15%'}}>
-                        <div className="point-value">20%</div>
-                        <div className="point-dot"></div>
-                      </div>
-                      <div className="trend-point" style={{left: '50%', bottom: '10%'}}>
-                        <div className="point-value">15%</div>
-                        <div className="point-dot"></div>
-                      </div>
-                      <div className="trend-point" style={{left: '70%', bottom: '12%'}}>
-                        <div className="point-value">18%</div>
-                        <div className="point-dot"></div>
-                      </div>
-                      <div className="trend-point" style={{left: '90%', bottom: '15%'}}>
-                        <div className="point-value">15%</div>
-                        <div className="point-dot"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="chart-labels">
-                    <span>Week 1</span>
-                    <span>Week 2</span>
-                    <span>Week 3</span>
-                    <span>Week 4</span>
-                    <span>Week 5</span>
-                  </div>
-                </div>
-              </div>
+             <div className="chart-card">
+      <h3>Risk Trend Over Time</h3>
+      <div className="risk-trend-chart-container">
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart
+            data={RiskAnalysisData.data}
+            margin={{
+              top: 20, right: 30, left: 20, bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} padding={{ left: 20, right: 20 }} />
+            <YAxis
+              domain={[0, 30]} // Adjust domain based on your expected risk percentage range
+              tickFormatter={(value) => `${value}%`}
+              axisLine={false}
+              tickLine={false}
+              hide // Hide Y-axis for a cleaner look, as values are shown on points
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#5a7dfd"
+              strokeWidth={3}
+              dot={{ stroke: '#5a7dfd', strokeWidth: 2, r: 5 }}
+              activeDot={{ r: 8, stroke: '#5a7dfd', strokeWidth: 4 }}
+              label={({ value, index, x, y }) => (
+                <text x={x} y={y - 15} dy={-4} fill="#5a7dfd" textAnchor="middle" className="chart-label-value">
+                  {`${value}%`}
+                </text>
+              )}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
 
               <div className="chart-card">
                 <h3>Risk Factors Distribution</h3>
@@ -2365,69 +2510,20 @@ function RiskStatusPage() {
           </div>
 
           {/* Historical Risk Data */}
-          <div className="dashboard-section">
-            <h2>Historical Risk Analysis</h2>
-            <div className="historical-data">
-              <div className="data-summary">
-                <div className="summary-item">
-                  <h4>Average Risk Level</h4>
-                  <span className="summary-value low-risk">18%</span>
-                </div>
-                <div className="summary-item">
-                  <h4>Highest Risk Period</h4>
-                  <span className="summary-value">Week 2 (25%)</span>
-                </div>
-                <div className="summary-item">
-                  <h4>Risk Improvement</h4>
-                  <span className="summary-value positive">-10%</span>
-                </div>
-                <div className="summary-item">
-                  <h4>Interventions Used</h4>
-                  <span className="summary-value">2</span>
-                </div>
-              </div>
-              <div className="risk-timeline">
-                <h4>Risk Timeline</h4>
-                <div className="timeline">
-                  <div className="timeline-item">
-                    <div className="timeline-date">Week 1</div>
-                    <div className="timeline-content">
-                      <div className="timeline-risk low">25% Risk</div>
-                      <div className="timeline-note">Initial assessment</div>
-                    </div>
-                  </div>
-                  <div className="timeline-item">
-                    <div className="timeline-date">Week 2</div>
-                    <div className="timeline-content">
-                      <div className="timeline-risk low">20% Risk</div>
-                      <div className="timeline-note">Improved attendance</div>
-                    </div>
-                  </div>
-                  <div className="timeline-item">
-                    <div className="timeline-date">Week 3</div>
-                    <div className="timeline-content">
-                      <div className="timeline-risk low">15% Risk</div>
-                      <div className="timeline-note">Better quiz scores</div>
-                    </div>
-                  </div>
-                  <div className="timeline-item">
-                    <div className="timeline-date">Week 4</div>
-                    <div className="timeline-content">
-                      <div className="timeline-risk low">18% Risk</div>
-                      <div className="timeline-note">Assignment delay</div>
-                    </div>
-                  </div>
-                  <div className="timeline-item">
-                    <div className="timeline-date">Week 5</div>
-                    <div className="timeline-content">
-                      <div className="timeline-risk low">15% Risk</div>
-                      <div className="timeline-note">Current status</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="historical-analysis-section">
+      <h2 className="section-title">Historical Risk Analysis</h2>
+      
+      {/* Historical Summary Dashboard */}
+      <div className="historical-summary-card">
+        {historicalData.summary.map((item, index) => (
+          <div className="summary-item" key={index}>
+            <h4 className="summary-title">{item.title}</h4>
+            <span className={`summary-value ${item.colorClass}`}>{item.value}</span>
           </div>
+        ))}
+      </div>
+
+    </div>
         </div>
       </div>
     </div>
@@ -2445,8 +2541,8 @@ function ProfilePage() {
       fullName: 'John Doe',
       dateOfBirth: 'March 15, 2002',
       gender: 'Male',
-      nationality: 'American',
-      bloodType: 'O+'
+      AdhaarNumber: '1234-5678-9012',
+      Category: 'Gen'
     },
     contact: {
       email: 'john.doe@university.edu',
@@ -2710,7 +2806,7 @@ Expected Graduation: ${profileData.academic.expectedGraduation}
               <div className="profile-photo-section">
                 <div className="profile-photo-large">
                   <img 
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" 
+                    src="https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?q=80&w=1985&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                     alt="Student Photo" 
                     className="profile-image"
                   />
@@ -2834,37 +2930,34 @@ Expected Graduation: ${profileData.academic.expectedGraduation}
                     )}
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Nationality</span>
+                    <span className="info-label">Aadhar Number</span>
                     {editingSection === 'personal' ? (
                       <input
                         type="text"
-                        value={profileData.personal.nationality}
-                        onChange={(e) => handleInputChange('personal', 'nationality', e.target.value)}
+                        value={profileData.personal.adhaarNumber}
+                        onChange={(e) => handleInputChange('personal', 'adhaarNumber', e.target.value)}
                         className="edit-input"
                       />
                     ) : (
-                      <span className="info-value">{profileData.personal.nationality}</span>
+                      <span className="info-value">{profileData.personal.AdhaarNumber}</span>
                     )}
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Blood Type</span>
+                    <span className="info-label">Category</span>
                     {editingSection === 'personal' ? (
                       <select
-                        value={profileData.personal.bloodType}
-                        onChange={(e) => handleInputChange('personal', 'bloodType', e.target.value)}
+                        value={profileData.personal.Category}
+                        onChange={(e) => handleInputChange('personal', 'Category', e.target.value)}
                         className="edit-select"
                       >
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
+                        <option value="Gen">GEN</option>
+                        <option value="SC/ST">SC/ST</option>
+                        <option value="OBC">OBC</option>
+                        <option value="Other">Other</option>
+                        
                       </select>
                     ) : (
-                      <span className="info-value">{profileData.personal.bloodType}</span>
+                      <span className="info-value">{profileData.personal.Category}</span>
                     )}
                   </div>
                 </div>
@@ -3207,13 +3300,66 @@ Expected Graduation: ${profileData.academic.expectedGraduation}
     </div>
   );
 }
+const mockInstructors = [
+  {
+    id: 1,
+    name: 'Dr. Smith',
+    subject: 'Mathematics',
+    avatar: 'SM',
+    imageUrl: 'https://images.unsplash.com/photo-1542838183-500f135b3e21?q=80&w=1740&auto=format&fit=crop',
+    bio: 'Dr. Smith specializes in advanced calculus and has over 15 years of teaching experience. He is known for his clear explanations and practical problem-solving approach.',
+    rating: 4.8,
+    courses: ['Advanced Calculus', 'Linear Algebra', 'Differential Equations'],
+    mentorship: {
+      sessions: 12,
+      lastSession: 'September 10, 2025'
+    }
+  },
+  {
+    id: 2,
+    name: 'Prof. Johnson',
+    subject: 'Programming',
+    avatar: 'JO',
+    imageUrl: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=1812&auto=format&fit=crop',
+    bio: 'Prof. Johnson is an expert in data structures and algorithms. He has a passion for helping students master complex coding concepts through hands-on projects.',
+    rating: 4.5,
+    courses: ['Data Structures & Algorithms', 'Object-Oriented Programming', 'Web Development Basics'],
+    mentorship: {
+      sessions: 8,
+      lastSession: 'September 12, 2025'
+    }
+  },
+  {
+    id: 3,
+    name: 'Ms. Williams',
+    subject: 'Physics',
+    avatar: 'WI',
+    imageUrl: 'https://images.unsplash.com/photo-1542749363-2339d67ef733?q=80&w=1740&auto=format&fit=crop',
+    bio: 'Ms. Williams is a research scientist and a visiting faculty member. Her classes are highly engaging, focusing on real-world applications of physics principles.',
+    rating: 4.9,
+    courses: ['Quantum Mechanics', 'Thermodynamics', 'Classical Physics'],
+    mentorship: {
+      sessions: 5,
+      lastSession: 'August 28, 2025'
+    }
+  },
+];
 
 function MyInstructorsPage() {
   const session = readSession();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedInstructor, setSelectedInstructor] = useState(null);
 
   useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+
+  const handleViewDetailsClick = (instructor) => {
+    setSelectedInstructor(instructor);
+  };
+
+  const closeModal = () => {
+    setSelectedInstructor(null);
+  };
 
   return (
     <div className="dashboard-layout">
@@ -3319,34 +3465,161 @@ function MyInstructorsPage() {
 
         <div className="dashboard-container">
           <div className="dashboard-section">
-            <h2>Your Instructors</h2>
-            <div className="instructors-list">
-              <div className="instructor-card">
-                <h3>Dr. Smith</h3>
-                <p>Mathematics</p>
+            <h2>Your Mentors & Instructors</h2>
+            <div className="instructors-grid">
+              {mockInstructors.map(instructor => (
+                <div 
+                  key={instructor.id} 
+                  className="instructor-card"
+                >
+                  <div className="instructor-card-top">
+                    {instructor.imageUrl ? (
+                      <img src={instructor.imageUrl} alt={instructor.name} className="instructor-photo" />
+                    ) : (
+                      <div className="instructor-card-avatar">{instructor.avatar}</div>
+                    )}
+                    <div className="instructor-info">
+                      <h3 className="instructor-name">{instructor.name}</h3>
+                      <p className="instructor-subject">{instructor.subject}</p>
+                      <div className="instructor-rating">
+                        <span className="rating-score">{instructor.rating}</span>
+                        <span className="rating-stars">⭐</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button 
+                    className="view-details-btn"
+                    onClick={() => handleViewDetailsClick(instructor)}
+                  >
+                    View Details
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="modal-section ask-doubt-section">
+                <h4>Ask a Doubt</h4>
+                <p>Have a question for this instructor? Write it here.</p>
+                <textarea 
+                  className="doubt-textarea" 
+                  placeholder="Enter your question here..." 
+                ></textarea>
+                <button className="doubt-submit-btn">Submit Doubt</button>
               </div>
-              <div className="instructor-card">
-                <h3>Prof. Johnson</h3>
-                <p>Programming</p>
+        </div>
+        
+      </div>
+      
+
+      {/* Instructor Details Modal */}
+      {selectedInstructor && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="instructor-modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={closeModal}>×</button>
+            <div className="modal-header">
+              {selectedInstructor.imageUrl ? (
+                <img src={selectedInstructor.imageUrl} alt={selectedInstructor.name} className="modal-photo" />
+              ) : (
+                <div className="modal-avatar">{selectedInstructor.avatar}</div>
+              )}
+              <div className="modal-title">
+                <h3>{selectedInstructor.name}</h3>
+                <p>{selectedInstructor.subject}</p>
+              </div>
+            </div>
+            <div className="modal-body">
+              <div className="modal-section">
+                <h4>About</h4>
+                <p>{selectedInstructor.bio}</p>
+              </div>
+              <div className="modal-section">
+                <h4>Mentorship Details</h4>
+                <div className="mentorship-details">
+                  <span>Total Sessions: <strong>{selectedInstructor.mentorship.sessions}</strong></span>
+                  <span>Last Session: <strong>{selectedInstructor.mentorship.lastSession}</strong></span>
+                </div>
+              </div>
+              <div className="modal-section">
+                <h4>Courses Taught</h4>
+                <ul className="courses-list">
+                  {selectedInstructor.courses.map((course, index) => (
+                    <li key={index}>{course}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="modal-section feedback-section">
+                <h4>Rating & Feedback</h4>
+                <div className="current-rating">
+                  <span className="rating-label">Average Rating:</span>
+                  <span className="rating-score">{selectedInstructor.rating} ⭐</span>
+                </div>
+                <button className="feedback-btn">Give Feedback</button>
               </div>
             </div>
           </div>
+          
         </div>
-      </div>
+        
+      )}
     </div>
   );
 }
-
+const mockSchedule = [
+  {
+    day: 'Monday',
+    classes: [
+      { id: 1, time: '9:00 AM - 10:30 AM', subject: 'Advanced Calculus', instructor: 'Dr. Smith' },
+      { id: 2, time: '11:00 AM - 12:30 PM', subject: 'Linear Algebra', instructor: 'Dr. Singh' },
+      { id: 3, time: '2:00 PM - 3:30 PM', subject: 'Data Structures & Algorithms', instructor: 'Prof. Johnson' },
+    ],
+  },
+  {
+    day: 'Tuesday',
+    classes: [
+      { id: 4, time: '10:00 AM - 11:30 AM', subject: 'Thermodynamics', instructor: 'Ms. Williams' },
+      { id: 5, time: '1:00 PM - 2:30 PM', subject: 'Web Development Basics', instructor: 'Prof. Johnson' },
+    ],
+  },
+  {
+    day: 'Wednesday',
+    classes: [
+      { id: 6, time: '9:00 AM - 10:30 AM', subject: 'Differential Equations', instructor: 'Dr. Smith' },
+      { id: 7, time: '1:00 PM - 2:30 PM', subject: 'Quantum Mechanics', instructor: 'Ms. Williams' },
+    ],
+  },
+  {
+    day: 'Thursday',
+    classes: [
+      { id: 8, time: '11:00 AM - 12:30 PM', subject: 'Object-Oriented Programming', instructor: 'Prof. Johnson' },
+      { id: 9, time: '3:00 PM - 4:30 PM', subject: 'Classical Physics', instructor: 'Ms. Williams' },
+    ],
+  },
+  {
+    day: 'Friday',
+    classes: [
+      { id: 10, time: '9:00 AM - 10:30 AM', subject: 'Advanced Calculus', instructor: 'Dr. Smith' },
+      { id: 11, time: '1:00 PM - 2:30 PM', subject: 'Data Structures & Algorithms', instructor: 'Prof. Johnson' },
+    ],
+  },
+];
 function SchedulePage() {
   const session = readSession();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Set the initial selected day to the current day of the week
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const [selectedDay, setSelectedDay] = useState(today);
 
-  useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+  useEffect(() => {
+    if (!session) navigate('/login');
+  }, [navigate, session]);
+
+  const todaySchedule = mockSchedule.find(schedule => schedule.day === selectedDay);
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
+      {/* Sidebar - Your existing sidebar code */}
       <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -3448,17 +3721,38 @@ function SchedulePage() {
 
         <div className="dashboard-container">
           <div className="dashboard-section">
-            <h2>Class Schedule</h2>
-            <div className="schedule-grid">
-              <div className="schedule-item">
-                <h3>Monday</h3>
-                <p>Mathematics - 9:00 AM</p>
-                <p>Programming - 2:00 PM</p>
-              </div>
-              <div className="schedule-item">
-                <h3>Tuesday</h3>
-                <p>Data Structures - 10:00 AM</p>
-              </div>
+            <h2>Weekly Schedule</h2>
+            <div className="day-selector">
+              {mockSchedule.map((schedule) => (
+                <button
+                  key={schedule.day}
+                  className={`day-button ${selectedDay === schedule.day ? 'active' : ''}`}
+                  onClick={() => setSelectedDay(schedule.day)}
+                >
+                  {schedule.day}
+                </button>
+              ))}
+            </div>
+
+            <div className="daily-schedule-card">
+              <h3>{todaySchedule?.day}Today's Classes</h3>
+              {todaySchedule && todaySchedule.classes.length > 0 ? (
+                <div className="classes-list">
+                  {todaySchedule.classes.map((classItem) => (
+                    <div key={classItem.id} className="class-item">
+                      <div className="class-time">{classItem.time}</div>
+                      <div className="class-details">
+                        <div className="subject-name">{classItem.subject}</div>
+                        <div className="instructor-name">with {classItem.instructor}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-classes">
+                  <p>No classes scheduled for today! Enjoy your day off.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -3466,13 +3760,64 @@ function SchedulePage() {
     </div>
   );
 }
+const mockCourseData = [
+  {
+    id: 1,
+    subject: 'Mathematics',
+    score: '92%',
+    status: 'Excellent',
+    averageScore: '85%',
+    classRank: 'Top 5%',
+    instructorNotes: "Gaurav, your performance in Mathematics is outstanding. Keep up the excellent work, and consider exploring more advanced topics in Number Theory to challenge yourself.",
+    topics: [
+      { name: 'Algebra', score: '95%', status: 'Excellent' },
+      { name: 'Calculus', score: '90%', status: 'Excellent' },
+      { name: 'Geometry', score: '89%', status: 'Good' },
+    ],
+  },
+  {
+    id: 2,
+    subject: 'Programming',
+    score: '88%',
+    status: 'Good',
+    averageScore: '80%',
+    classRank: 'Top 10%',
+    instructorNotes: "Your progress in Programming is solid. To improve your problem-solving speed, I recommend dedicating more time to mastering data structures like Trees and Graphs.",
+    topics: [
+      { name: 'Data Structures', score: '82%', status: 'Good' },
+      { name: 'Algorithms', score: '88%', status: 'Good' },
+      { name: 'Web Development', score: '95%', status: 'Excellent' },
+    ],
+  },
+  {
+    id: 3,
+    subject: 'Physics',
+    score: '75%',
+    status: 'Average',
+    averageScore: '80%',
+    classRank: 'Top 50%',
+    instructorNotes: "You are doing well in foundational concepts, but you need to work on practical applications. Attend the problem-solving sessions and ask more doubts on the portal.",
+    topics: [
+      { name: 'Kinematics', score: '80%', status: 'Good' },
+      { name: 'Mechanics', score: '70%', status: 'Average' },
+      { name: 'Thermodynamics', score: '75%', status: 'Average' },
+    ],
+  },
+];
 
 function CourseAnalysisPage() {
   const session = readSession();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedSubject, setExpandedSubject] = useState(null);
 
-  useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+  useEffect(() => {
+    if (!session) navigate('/login');
+  }, [navigate, session]);
+
+  const handleExpand = (subject) => {
+    setExpandedSubject(expandedSubject === subject ? null : subject);
+  };
 
   return (
     <div className="dashboard-layout">
@@ -3579,25 +3924,60 @@ function CourseAnalysisPage() {
         <div className="dashboard-container">
           <div className="dashboard-section">
             <h2>Course Performance Analysis</h2>
-            <div className="analysis-grid">
-              <div className="analysis-card">
-                <h3>Mathematics</h3>
-                <p>Score: 92%</p>
-                <p>Status: Excellent</p>
+            
+            {mockCourseData.map((course) => (
+              <div key={course.id} className="course-card">
+                <div className="course-header" onClick={() => handleExpand(course.subject)}>
+                  <h3>{course.subject}</h3>
+                  <div className="course-stats">
+                    <span className="score">Score: {course.score}</span>
+                    <span className="status status-tag">{course.status}</span>
+                    <span className="toggle-icon">{expandedSubject === course.subject ? '−' : '+'}</span>
+                  </div>
+                </div>
+
+                {expandedSubject === course.subject && (
+                  <div className="course-details">
+                    <div className="performance-summary">
+                      <div className="summary-card">
+                        <p>Average Class Score</p>
+                        <h4>{course.averageScore}</h4>
+                      </div>
+                      <div className="summary-card">
+                        <p>Your Class Rank</p>
+                        <h4>{course.classRank}</h4>
+                      </div>
+                    </div>
+                    
+                    <div className="topic-breakdown">
+                      <h4>Topic-wise Breakdown</h4>
+                      <ul className="topic-list">
+                        {course.topics.map((topic, index) => (
+                          <li key={index} className="topic-item">
+                            <span className="topic-name">{topic.name}</span>
+                            <span className="topic-score">{topic.score}</span>
+                            <span className={`status-tag status-${topic.status.toLowerCase()}`}>{topic.status}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="instructor-notes">
+                      <h4>Instructor Notes</h4>
+                      <p>{course.instructorNotes}</p>
+                    </div>
+
+                  </div>
+                )}
               </div>
-              <div className="analysis-card">
-                <h3>Programming</h3>
-                <p>Score: 88%</p>
-                <p>Status: Good</p>
-              </div>
-            </div>
+            ))}
+
           </div>
         </div>
       </div>
     </div>
   );
 }
-
 function AcademicPerformancePage() {
   const session = readSession();
   const navigate = useNavigate();
@@ -5544,7 +5924,7 @@ function InstructorDashboard(){
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item active">
+            <Link to="/insoverview" className="nav-item active">
               <span className="nav-text">Overview</span>
             </Link>
             <Link to="/risk-status" className="nav-item">
@@ -5669,3 +6049,10 @@ function InstructorDashboard(){
     </div>
   );
 }
+function instructorOverview() {
+  // const session = readSession();
+  // const navigate = useNavigate();
+  // useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+  return <InstructorDashboard />;
+}
+

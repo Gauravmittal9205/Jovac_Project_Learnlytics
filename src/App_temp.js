@@ -6,6 +6,23 @@ import Help from './Help';
 import About from './About';
 import Resources from './Resources';
 import Contact from './Contact';
+import {
+  RadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LabelList,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from "recharts";
 
 // LocalStorage-based auth helpers
 const USERS_KEY = 'learnlytics_users';
@@ -1653,71 +1670,99 @@ function ForgotPasswordPage(){
 
 // Individual Page Components for Sidebar Navigation
 function OverviewPage() {
-  const session = readSession();
+  
+ const session = readSession();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+  useEffect(() => {
+    if (!session) navigate('/login');
+  }, [navigate, session]);
+
 
   const studentData = {
-    name: session?.name || 'John Doe',
-    course: 'Computer Science',
-    year: '3rd Year',
-    semester: 'Fall 2024',
-    photo: '👨‍🎓',
+    name: "John Doe",
+    course: "Computer Science",
+    year: "3rd Year",
+    semester: "Fall 2024",
+    photo: "👨‍🎓",
     attendance: 95,
     avgQuizScore: 87,
     totalStudyHours: 42,
     engagementScore: 92,
-    riskLevel: 'Low',
-    engagementTrend: [
-      { week: 'Week 1', score: 85 },
-      { week: 'Week 2', score: 88 },
-      { week: 'Week 3', score: 92 },
-      { week: 'Week 4', score: 90 },
-      { week: 'Week 5', score: 94 },
-      { week: 'Week 6', score: 96 }
+    riskLevel: "Low",
+    data: [
+      { week: "Week 1", score: 85 },
+      { week: "Week 2", score: 88 },
+      { week: "Week 3", score: 92 },
+      { week: "Week 4", score: 33 },
+      { week: "Week 5", score: 94 },
+      { week: "Week 6", score: 96 },
     ],
-    timeDistribution: [
-      { activity: 'Lectures', hours: 15, percentage: 35 },
-      { activity: 'Assignments', hours: 12, percentage: 28 },
-      { activity: 'Study', hours: 10, percentage: 23 },
-      { activity: 'Projects', hours: 6, percentage: 14 }
+    timeData: [
+      { activity: "Lectures", hours: 15, percentage: 35 },
+      { activity: "Assignments", hours: 12, percentage: 28 },
+      { activity: "Study", hours: 10, percentage: 23 },
+      { activity: "Projects", hours: 6, percentage: 14 },
     ],
     performanceData: [
-      { subject: 'Mathematics', score: 92, status: 'excellent' },
-      { subject: 'Programming', score: 88, status: 'good' },
-      { subject: 'Data Structures', score: 85, status: 'good' },
-      { subject: 'Algorithms', score: 90, status: 'excellent' },
-      { subject: 'Database', score: 78, status: 'needs-improvement' }
+      { subject: "Mathematics", score: 92, status: "excellent" },
+      { subject: "Programming", score: 88, status: "good" },
+      { subject: "Data Structures", score: 85, status: "good" },
+      { subject: "Algorithms", score: 90, status: "excellent" },
+      { subject: "Database", score: 78, status: "needs-improvement" },
     ],
     recommendations: [
-      { type: 'study', title: 'Advanced Algorithms', reason: 'Based on your strong performance in basic algorithms' },
-      { type: 'practice', title: 'Database Design', reason: 'Improve your database management skills' },
-      { type: 'resource', title: 'Math Problem Sets', reason: 'Maintain your excellent math performance' }
-    ]
+      {
+        type: "study",
+        title: "Advanced Algorithms",
+        reason: "Based on your strong performance in basic algorithms",
+      },
+      {
+        type: "practice",
+        title: "Database Design",
+        reason: "Improve your database management skills",
+      },
+      {
+        type: "resource",
+        title: "Math Problem Sets",
+        reason: "Maintain your excellent math performance",
+      },
+    ],
   };
+
+  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
+  const Colors = ["#8b5cf6"];
+
+  // Risk level dummy data
+  const riskData = [{ name: "Risk", value: studentData.engagementScore }];
+  const needleAngle = (studentData.engagementScore / 100) * 180;
+  const riskLevel = studentData.riskLevel;
 
   return (
     <div className="dashboard-layout">
       {/* Sidebar */}
-      <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+      <div className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <div className="logo-shield">L</div>
             <span className="brand-text">Learnlytics</span>
           </div>
-          <button 
+          <button
             className="sidebar-toggle"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            {sidebarOpen ? '←' : '→'}
+            {sidebarOpen ? "←" : "→"}
           </button>
         </div>
-        
+
         <div className="sidebar-profile">
           <div className="profile-avatar">
-            {studentData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            {studentData.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()}
           </div>
           <div className="profile-info">
             <h4>{studentData.name}</h4>
@@ -1738,7 +1783,6 @@ function OverviewPage() {
               <span className="nav-text">Profile</span>
             </Link>
           </div>
-          
           <div className="nav-section">
             <h5>Academic</h5>
             <Link to="/my-instructors" className="nav-item">
@@ -1754,7 +1798,6 @@ function OverviewPage() {
               <span className="nav-text">Academic Performance</span>
             </Link>
           </div>
-          
           <div className="nav-section">
             <h5>Tools</h5>
             <Link to="/feedback" className="nav-item">
@@ -1770,11 +1813,11 @@ function OverviewPage() {
         </nav>
 
         <div className="sidebar-footer">
-          <button 
+          <button
             className="logout-btn"
             onClick={() => {
               clearSession();
-              navigate('/');
+              navigate("/");
             }}
           >
             <span className="nav-text">Logout</span>
@@ -1783,10 +1826,10 @@ function OverviewPage() {
       </div>
 
       {/* Main Content */}
-      <div className={`dashboard-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      <div className={`dashboard-main ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
         <div className="dashboard-header">
           <div className="header-left">
-            <button 
+            <button
               className="mobile-sidebar-toggle"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
@@ -1813,148 +1856,114 @@ function OverviewPage() {
         </div>
 
         <div className="dashboard-container">
-          {/* Overview Section */}
+          {/* Profile + Quick Stats */}
           <div className="dashboard-section">
             <div className="profile-card">
               <div className="profile-info">
                 <div className="profile-photo">{studentData.photo}</div>
                 <div className="profile-details">
                   <h3>{studentData.name}</h3>
-                  <p>{studentData.course} • {studentData.year} {studentData.semester}</p>
+                  <p>
+                    {studentData.course} • {studentData.year} {studentData.semester}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="quick-stats">
-              <div className="stat-card">
-                <div className="stat-icon attendance"></div>
-                <div className="stat-content">
-                  <div className="stat-value">{studentData.attendance}%</div>
-                  <div className="stat-label">Attendance</div>
+              {[
+                { label: "Attendance", value: `${studentData.attendance}%`, icon: "attendance" },
+                { label: "Avg Quiz Score", value: `${studentData.avgQuizScore}%`, icon: "quiz" },
+                { label: "Study Hours", value: `${studentData.totalStudyHours}h`, icon: "study" },
+                { label: "Engagement", value: `${studentData.engagementScore}%`, icon: "engagement" },
+              ].map((stat, index) => (
+                <div className="stat-card" key={index}>
+                  <div className={`stat-icon ${stat.icon}`}></div>
+                  <div className="stat-content">
+                    <div className="stat-value">{stat.value}</div>
+                    <div className="stat-label">{stat.label}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon quiz"></div>
-                <div className="stat-content">
-                  <div className="stat-value">{studentData.avgQuizScore}%</div>
-                  <div className="stat-label">Avg Quiz Score</div>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon study"></div>
-                <div className="stat-content">
-                  <div className="stat-value">{studentData.totalStudyHours}h</div>
-                  <div className="stat-label">Study Hours</div>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon engagement"></div>
-                <div className="stat-content">
-                  <div className="stat-value">{studentData.engagementScore}%</div>
-                  <div className="stat-label">Engagement</div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Graphs & Charts Section */}
+          {/* Charts Section */}
           <div className="dashboard-section">
             <h2 className="section-title">Analytics & Performance</h2>
-            
             <div className="charts-grid">
-              {/* Engagement Trend Chart */}
-              <div className="chart-card">
-                <h3>Engagement Trend</h3>
-                <div className="line-chart">
-                  <div className="chart-container">
-                    {studentData.engagementTrend.map((point, index) => (
-                      <div key={index} className="chart-point" style={{
-                        left: `${(index / (studentData.engagementTrend.length - 1)) * 100}%`,
-                        bottom: `${point.score}%`
-                      }}>
-                        <div className="point-value">{point.score}%</div>
-                        <div className="point-dot"></div>
-                      </div>
-                    ))}
-                    <div className="chart-line"></div>
-                  </div>
-                  <div className="chart-labels">
-                    {studentData.engagementTrend.map((point, index) => (
-                      <div key={index} className="chart-label">{point.week}</div>
-                    ))}
-                  </div>
-                </div>
+              {/* Engagement Trend BarChart */}
+              <div className="chart-card p-4 shadow-lg rounded-2xl bg-white">
+                <h3 className="text-lg font-semibold mb-4">Engagement Trend</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={studentData.data}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="week" tick={{ fontSize: 12 }} />
+                    <YAxis domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip formatter={(value) => `${value}%`} labelStyle={{ fontWeight: "bold" }} />
+                    <Bar dataKey="score" fill="#2563eb" radius={[8, 8, 0, 0]}>
+                      <LabelList dataKey="score" position="top" formatter={(val) => `${val}%`} fill="#2563eb" fontSize={12} fontWeight="bold" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
 
-              {/* Time Distribution Chart */}
-              <div className="chart-card">
-                <h3>Time Spent Distribution</h3>
-                <div className="pie-chart">
-                  <div className="pie-container">
-                    {studentData.timeDistribution.map((item, index) => (
-                      <div key={index} className="pie-segment" style={{
-                        '--percentage': item.percentage,
-                        '--color': ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'][index]
-                      }}>
-                        <div className="segment-label">{item.activity}</div>
-                        <div className="segment-percentage">{item.percentage}%</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pie-legend">
-                    {studentData.timeDistribution.map((item, index) => (
-                      <div key={index} className="legend-item">
-                        <div className="legend-color" style={{
-                          backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'][index]
-                        }}></div>
-                        <span>{item.activity}: {item.hours}h</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {/* Time Distribution PieChart */}
+              <div className="chart-card p-6 shadow-lg rounded-2xl bg-white">
+                <h3 className="text-lg font-semibold mb-4">Time Spent Distribution</h3>
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie
+                      data={studentData.timeData}
+                      dataKey="percentage"
+                      nameKey="activity"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={120}
+                      paddingAngle={3}
+                    >
+                      {studentData.timeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value, name, props) => [`${value}%`, `${props.payload.activity} (${props.payload.hours}h)`]} />
+                    <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" formatter={(value, entry) => `${value}: ${entry.payload.hours}h`} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
 
-              {/* Performance Comparison Chart */}
-              <div className="chart-card">
-                <h3>Performance Comparison</h3>
-                <div className="bar-chart">
-                  {studentData.performanceData.map((subject, index) => (
-                    <div key={index} className="bar-item">
-                      <div className="bar-label">{subject.subject}</div>
-                      <div className="bar-container">
-                        <div className={`bar ${subject.status}`} style={{ width: `${subject.score}%` }}>
-                          <span className="bar-value">{subject.score}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {/* Performance Comparison BarChart */}
+              <div className="chart-card p-6 shadow-lg rounded-2xl bg-white w-full h-[400px]">
+                <h3 className="text-xl font-semibold mb-6">Performance Comparison</h3>
+                <ResponsiveContainer width="100%" height="90%">
+                  <BarChart
+                    layout="vertical"
+                    data={studentData.performanceData}
+                    margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
+                    barCategoryGap="20%"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
+                    <YAxis type="category" dataKey="subject" tick={{ fontSize: 14, fill: "#374151" }} />
+                    <Tooltip formatter={(value) => `${value}%`} />
+                    <Bar dataKey="score" barSize={20} radius={[0, 10, 10, 0]} animationDuration={1200}>
+                      {studentData.performanceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={Colors[index % Colors.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
 
-              {/* Risk Level Indicator */}
-              <div className="chart-card">
-                <h3>Risk Level Indicator</h3>
-                <div className="gauge-chart">
-                  <div className={`gauge ${studentData.riskLevel.toLowerCase()}`}>
-                    <div className="gauge-needle"></div>
-                    <div className="gauge-center"></div>
-                  </div>
-                  <div className="gauge-labels">
-                    <span>Low</span>
-                    <span>Medium</span>
-                    <span>High</span>
-                  </div>
-                  <div className="risk-status">
-                    <span className={`risk-badge ${studentData.riskLevel.toLowerCase()}`}>
-                      {studentData.riskLevel} Risk
-                    </span>
-                  </div>
-                </div>
-              </div>
+              
             </div>
           </div>
 
-          {/* Personalized Recommendations */}
+          {/* Recommendations Section */}
           <div className="dashboard-section">
             <h2 className="section-title">Suggested for You</h2>
             <div className="recommendations-grid">
@@ -1975,6 +1984,10 @@ function OverviewPage() {
     </div>
   );
 }
+
+
+
+
 
 function RiskStatusPage() {
   const session = readSession();
