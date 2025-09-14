@@ -111,7 +111,7 @@ function App() {
         <Route path="/course-analysis" element={<CourseAnalysisPage />} />
         <Route path="/academic-performance" element={<AcademicPerformancePage />} />
         <Route path="/my-students" element={<MyStudentsPage />} />
-        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/Studentresources" element={<ResourcesPage />} />
         <Route path="/insoverview" element={<InstructorDashboard />} />
       </Routes>
     </div>
@@ -1537,7 +1537,7 @@ function LoginPage(){
     const session = readSession();
     if (session) {
       if (session.role === 'instructor') navigate('/dashboard-instructor');
-      else navigate('/dashboard-student');
+      else navigate('/overview');
     }
   }, [navigate]);
   const onSubmit = (e) => {
@@ -1550,7 +1550,7 @@ function LoginPage(){
     if (role && user.role !== role) { setError(`This account is registered as ${user.role}.`); return; }
     writeSession({ email: user.email, role: user.role, name: user.name || '' });
     if (user.role === 'instructor') navigate('/dashboard-instructor');
-    else navigate('/dashboard-student');
+    else navigate('/overview');
   };
   return (
     <div className="auth-screen">
@@ -1809,7 +1809,7 @@ function OverviewPage() {
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -2201,7 +2201,7 @@ function RiskStatusPage() {
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -2759,7 +2759,7 @@ Expected Graduation: ${profileData.academic.expectedGraduation}
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -3423,7 +3423,7 @@ function MyInstructorsPage() {
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -3679,7 +3679,7 @@ function SchedulePage() {
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -3881,7 +3881,7 @@ function CourseAnalysisPage() {
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -4047,7 +4047,7 @@ function AcademicPerformancePage() {
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -4106,31 +4106,80 @@ function AcademicPerformancePage() {
     </div>
   );
 }
-
+const resourcesData = {
+  'Video Lectures': {
+    'Mathematics': [
+      { id: 1, title: 'Calculus I - Limits', url: 'https://www.youtube.com/watch?v=WsQQvHm4lSw' },
+      { id: 2, title: 'Algebra II - Linear Equations', url: 'https://www.youtube.com/watch?v=0L-dEp8TuvU&list=PLlxE9WKuvDj85E5j0KBDvf4CFscn3L5hH' },
+    ],
+    'Physics': [
+      { id: 3, title: 'Kinematics - Motion in 1D', url: 'https://www.youtube.com/watch?v=CBvaO-uDvs8&list=PL_A4M5IAkMadyoou3Fl2jR0pG3X1Wi6xA' },
+      { id: 4, title: 'Newtonian Mechanics', url: 'https://www.youtube.com/watch?v=zftiLfSVEmI&list=PLh190Xdu5f-vFLr9WEu9lAMK5XYvoqpDv' },
+    ],
+  },
+  'Notes': {
+    'Mathematics': [
+      { id: 1, title: 'Calculus Notes (PDF)', url: 'https://example.com/notes/math-calc.pdf' },
+      { id: 2, title: 'Algebra Practice Sheet', url: 'https://example.com/notes/math-algebra.pdf' },
+    ],
+    'Physics': [
+      { id: 3, title: 'Physics Formulae', url: 'https://example.com/notes/physics-formulae.docx' },
+    ],
+  },
+  'Sample Quizzes': {
+    'Mathematics': [
+      { id: 1, title: 'Quiz 1: Limits & Continuity', url: 'https://example.com/quiz/math-q1' },
+      { id: 2, title: 'Quiz 2: Derivatives', url: 'https://example.com/quiz/math-q2' },
+    ],
+    'Physics': [
+      { id: 3, title: 'Quiz 1: Kinematics', url: 'https://example.com/quiz/physics-q1' },
+    ],
+  },
+  'Practice Questions': {
+    'Mathematics': [
+      { id: 1, title: 'Math Qs - Chapter 1', url: 'https://example.com/questions/math-ch1' },
+      { id: 2, title: 'Math Qs - Chapter 2', url: 'https://example.com/questions/math-ch2' },
+    ],
+    'Physics': [
+      { id: 3, title: 'Physics Qs - Chapter 1', url: 'https://example.com/questions/physics-ch1' },
+    ],
+  },
+};
 function ResourcesPage() {
   const session = readSession();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState('Video Lectures');
+  const [activeSubject, setActiveSubject] = useState('');
 
-  useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+  // Set the first subject as active when a new tab is clicked
+  useEffect(() => {
+    if (resourcesData[activeTab]) {
+      const firstSubject = Object.keys(resourcesData[activeTab])[0];
+      setActiveSubject(firstSubject);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!session) navigate('/login');
+  }, [navigate, session]);
+
+  const currentSubjects = resourcesData[activeTab] || {};
+  const currentResources = currentSubjects[activeSubject] || [];
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
+      {/* Sidebar - Retained from original code */}
       <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <div className="logo-shield">L</div>
             <span className="brand-text">Learnlytics</span>
           </div>
-          <button 
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
+          <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? '←' : '→'}
           </button>
         </div>
-        
         <div className="sidebar-profile">
           <div className="profile-avatar">
             {(session?.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -4140,7 +4189,6 @@ function ResourcesPage() {
             <p>Student</p>
           </div>
         </div>
-
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
@@ -4154,7 +4202,6 @@ function ResourcesPage() {
               <span className="nav-text">Profile</span>
             </Link>
           </div>
-          
           <div className="nav-section">
             <h5>Academic</h5>
             <Link to="/my-instructors" className="nav-item">
@@ -4170,13 +4217,12 @@ function ResourcesPage() {
               <span className="nav-text">Academic Performance</span>
             </Link>
           </div>
-          
           <div className="nav-section">
             <h5>Tools</h5>
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item active">
+            <Link to="/Studentresources" className="nav-item active">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -4184,15 +4230,8 @@ function ResourcesPage() {
             </Link>
           </div>
         </nav>
-
         <div className="sidebar-footer">
-          <button 
-            className="logout-btn"
-            onClick={() => {
-              clearSession();
-              navigate('/');
-            }}
-          >
+          <button className="logout-btn" onClick={() => { clearSession(); navigate('/'); }}>
             <span className="nav-text">Logout</span>
           </button>
         </div>
@@ -4202,10 +4241,7 @@ function ResourcesPage() {
       <div className={`dashboard-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="dashboard-header">
           <div className="header-left">
-            <button 
-              className="mobile-sidebar-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
+            <button className="mobile-sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <span className="hamburger">
                 <span></span>
                 <span></span>
@@ -4215,19 +4251,52 @@ function ResourcesPage() {
             <h1>Resources</h1>
           </div>
         </div>
-
         <div className="dashboard-container">
           <div className="dashboard-section">
-            <h2>Learning Resources</h2>
-            <div className="resources-grid">
-              <div className="resource-card">
-                <h3>Study Materials</h3>
-                <p>Access your course materials and study guides</p>
-              </div>
-              <div className="resource-card">
-                <h3>Video Tutorials</h3>
-                <p>Watch recorded lectures and tutorials</p>
-              </div>
+            {/* Main Tabs */}
+            <div className="tabs-header">
+              {Object.keys(resourcesData).map(tabName => (
+                <button
+                  key={tabName}
+                  className={`tab-button ${activeTab === tabName ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tabName)}
+                >
+                  {tabName}
+                </button>
+              ))}
+            </div>
+
+            {/* Subject Sub-tabs */}
+            <div className="subject-tabs">
+              {Object.keys(currentSubjects).map(subjectName => (
+                <button
+                  key={subjectName}
+                  className={`subject-tab ${activeSubject === subjectName ? 'active' : ''}`}
+                  onClick={() => setActiveSubject(subjectName)}
+                >
+                  {subjectName}
+                </button>
+              ))}
+            </div>
+
+            {/* Content Display */}
+            <div className="resources-content">
+              {currentResources.length > 0 ? (
+                <div className="resources-list">
+                  {currentResources.map(resource => (
+                    <div key={resource.id} className="resource-item-card">
+                      <h3>{resource.title}</h3>
+                      <a href={resource.url} target="_blank" rel="noopener noreferrer" className="resource-link">
+                        View Resource
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-content">
+                  <p>No resources available for this subject yet.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -4235,7 +4304,6 @@ function ResourcesPage() {
     </div>
   );
 }
-
 function MyStudentsPage() {
   const session = readSession();
   const navigate = useNavigate();
@@ -4305,7 +4373,7 @@ function MyStudentsPage() {
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -4479,7 +4547,7 @@ function StudentDashboard(){
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -4781,7 +4849,7 @@ function FeedbackPage(){
             <Link to="/feedback" className="nav-item active">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item">
@@ -4927,6 +4995,33 @@ function FeedbackPage(){
     </div>
   );
 }
+const engagementData = [
+    { week: 'Week 1', score: 75 },
+    { week: 'Week 2', score: 78 },
+    { week: 'Week 3', score: 82 },
+    { week: 'Week 4', score: 85 },
+    { week: 'Week 5', score: 80 },
+    { week: 'Week 6', score: 88 },
+    { week: 'Week 7', score: 82 },
+  ];
+
+  const currentScore = engagementData[engagementData.length - 1].score;
+  const peakScore = Math.max(...engagementData.map(point => point.score));
+  const trend = currentScore > engagementData[0].score ? 'Improving' : 'Stable';
+  const weeklyData = {
+  performanceData: [
+    { score: 95, status: 'excellent' },
+    { score: 88, status: 'excellent' },
+    { score: 65, status: 'needs-improvement' },
+    { score: 78, status: 'excellent' },
+    { score: 84, status: 'excellent' }
+  ]
+};
+const totalCourses = weeklyData.performanceData.length;
+  const averageScore = Math.round(weeklyData.performanceData.reduce((acc, course) => acc + course.score, 0) / totalCourses);
+  const excellentCourses = weeklyData.performanceData.filter(course => course.status === 'excellent').length;
+  const needsAttentionCourses = weeklyData.performanceData.filter(course => course.status === 'needs-improvement').length;
+
 
 function WeeklyReport(){
   const session = readSession();
@@ -5067,7 +5162,7 @@ function WeeklyReport(){
             <Link to="/feedback" className="nav-item">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/resources" className="nav-item">
+            <Link to="/Studentresources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
             <Link to="/weekly-report" className="nav-item active">
@@ -5123,133 +5218,145 @@ function WeeklyReport(){
           {/* Overall Report Graph Section */}
           <div className="dashboard-section">
             <h2 className="section-title">Overall Performance Trend</h2>
-            <div className="chart-card">
-              <h3>Weekly Performance Overview</h3>
-              <div className="line-chart">
-                <div className="chart-container">
-                  {studentData.engagementTrend.map((point, index) => (
-                    <div key={index} className="chart-point" style={{
-                      left: `${(index / (studentData.engagementTrend.length - 1)) * 100}%`,
-                      bottom: `${point.score}%`
-                    }}>
-                      <div className="point-value">{point.score}%</div>
-                      <div className="point-dot"></div>
-                    </div>
-                  ))}
-                  <div className="chart-line"></div>
-                </div>
-                <div className="chart-labels">
-                  {studentData.engagementTrend.map((point, index) => (
-                    <div key={index} className="chart-label">{point.week}</div>
-                  ))}
-                </div>
-              </div>
-              <div className="chart-summary">
-                <div className="summary-stat">
-                  <span className="stat-label">Current Score:</span>
-                  <span className="stat-value">{studentData.engagementScore}%</span>
-                </div>
-                <div className="summary-stat">
-                  <span className="stat-label">Trend:</span>
-                  <span className="stat-value positive">↗ Improving</span>
-                </div>
-                <div className="summary-stat">
-                  <span className="stat-label">Peak Score:</span>
-                  <span className="stat-value">88%</span>
-                </div>
-              </div>
-            </div>
+           
+
+
+    <div className="report-card">
+      <div className="card-header">
+        <h3 className="card-title">Weekly Report</h3>
+        <div className="header-stats">
+          <div className="stat-item">
+            <span className="stat-value">{currentScore}%</span>
+            <span className="stat-label">Engagement</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value risk-low">Low</span>
+            <span className="stat-label">Risk Level</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="performance-section">
+        
+        <div className="chart-container-recharts">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={engagementData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <YAxis domain={[70, 90]} hide /> {/* Set the domain for a better view */}
+              <XAxis dataKey="week" tickLine={false} axisLine={false} />
+              <Tooltip cursor={{ stroke: '#ddd', strokeWidth: 1 }} />
+              <Line
+                type="monotone"
+                dataKey="score"
+                stroke="#3f51b5"
+                strokeWidth={3}
+                dot={{ stroke: '#fff', strokeWidth: 2, r: 6 }}
+                activeDot={{ stroke: '#3f51b5', strokeWidth: 2, r: 8 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="summary-section">
+        <div className="summary-stat">
+          <span className="stat-label">Current Score:</span>
+          <span className="stat-value score-primary">{currentScore}%</span>
+        </div>
+        <div className="summary-stat">
+          <span className="stat-label">Trend:</span>
+          <span className={`stat-value trend ${trend === 'Improving' ? 'trend-positive' : ''}`}>
+            {trend === 'Improving' ? '↗ Improving' : 'Stable'}
+          </span>
+        </div>
+        <div className="summary-stat">
+          <span className="stat-label">Peak Score:</span>
+          <span className="stat-value score-primary">{peakScore}%</span>
+        </div>
+      </div>
+    </div>
           </div>
 
           {/* Course Report Section */}
           <div className="dashboard-section">
             <div className="section-header">
-              <h2 className="section-title">Course Performance Report</h2>
-              <div className="section-actions">
-                <button className="btn-icon" title="Filter courses">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                <button className="btn-icon" title="Sort by performance">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M6 12H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 18H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                <button className="btn-icon" title="View all courses">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 11H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 15H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 19H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 7H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 3H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div className="course-stats-overview">
-              <div className="stat-box">
-                <div className="stat-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className="stat-content">
-                  <span className="stat-number">{studentData.performanceData.length}</span>
-                  <span className="stat-label">Total Courses</span>
-                </div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className="stat-content">
-                  <span className="stat-number">
-                    {Math.round(studentData.performanceData.reduce((acc, course) => acc + course.score, 0) / studentData.performanceData.length)}%
-                  </span>
-                  <span className="stat-label">Average Score</span>
-                </div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className="stat-content">
-                  <span className="stat-number">
-                    {studentData.performanceData.filter(course => course.status === 'excellent').length}
-                  </span>
-                  <span className="stat-label">Excellent</span>
-                </div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 9V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 17H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className="stat-content">
-                  <span className="stat-number">
-                    {studentData.performanceData.filter(course => course.status === 'needs-improvement').length}
-                  </span>
-                  <span className="stat-label">Needs Attention</span>
-                </div>
-              </div>
-            </div>
+        <h2 className="section-title">Course Performance Report</h2>
+        <div className="section-actions">
+          <button className="btn-icon" title="Filter courses">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 3L2 3L10 12.46L10 19L14 21L14 12.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <button className="btn-icon" title="Sort by performance">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6H21M6 12H18M9 18H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <button className="btn-icon" title="View more options">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="5" r="1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="19" r="1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div className="course-stats-overview">
+        <div className="stat-box gradient-1">
+          <div className="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{totalCourses}</span>
+            <span className="stat-label">Total Courses</span>
+          </div>
+        </div>
+        
+        <div className="stat-box gradient-2">
+          <div className="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{averageScore}%</span>
+            <span className="stat-label">Average Score</span>
+          </div>
+        </div>
+        
+        <div className="stat-box gradient-3">
+          <div className="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{excellentCourses}</span>
+            <span className="stat-label">Excellent</span>
+          </div>
+        </div>
+        
+        <div className="stat-box gradient-4">
+          <div className="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{needsAttentionCourses}</span>
+            <span className="stat-label">Needs Attention</span>
+          </div>
+        </div>
+      </div>
 
             <div className="course-report-grid">
-              {studentData.performanceData.map((course, index) => (
+              {weeklyData.performanceData.map((course, index) => (
                 <div 
                   key={index} 
                   className={`course-report-card ${course.status} hover-lift ${hoveredCard === index ? 'hovered' : ''}`}
