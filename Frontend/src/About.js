@@ -19,11 +19,6 @@ const useRevealOnScroll = () => {
   }, []);
 };
 
-// =========================================================================
-// STYLED COMPONENTS (इन्हें आप अपने कॉम्पोनेंट के ऊपर डिफाइन करें)
-// =========================================================================
-
-// Global styles for consistency
 const StyledAboutPage = styled.div`
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: #1a202c;
@@ -218,7 +213,7 @@ const Chip = styled.span`
 // Gallery
 const GalleryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
 `;
@@ -473,9 +468,9 @@ function WhyItem({ icon, title, text, proof }) {
 }
 
 const teamMembers = [
-  { name: 'Anushree Agrawal', title: 'Co-Founder & CEO', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=1200&auto=format&fit=crop' },
-  { name: 'Gaurav Mittal', title: 'Chief Product Officer', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1200&auto=format&fit=crop' },
-  { name: 'Harshit Bhardwaj', title: 'Lead Data Scientist', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29329?q=80&w=1200&auto=format&fit=crop' },
+  { name: 'Anushree Agrawal', title: 'Co-Founder & CEO', img: 'https://images.unsplash.com/photo-1720765551038-3571ca77dccd?q=80&w=1193&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { name: 'Gaurav Mittal', title: 'Chief Product Officer', img: 'https://images.unsplash.com/photo-1638174267779-5fcd54afe356?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { name: 'Harshit Bhardwaj', title: 'Lead Data Scientist', img: 'https://images.unsplash.com/photo-1659353221237-6a1cfb73fd90?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
 ];
 
 const testimonials = [
@@ -547,9 +542,9 @@ export default function About() {
         <SectionTitle className="reveal">Inside the product</SectionTitle>
         <SectionSubtext className="reveal">Hover images to explore — they gently zoom and tilt.</SectionSubtext>
         <GalleryGrid className="reveal">
-          <GalleryItem><img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1200&auto=format&fit=crop" alt="Dashboard view" /><figcaption>Dashboard</figcaption></GalleryItem>
-          <GalleryItem><img src="https://images.unsplash.com/photo-1553867745-1e2f3a63d8d3?q=80&w=1200&auto=format&fit=crop" alt="Alerts view" /><figcaption>Alerts</figcaption></GalleryItem>
-          <GalleryItem><img src="https://images.unsplash-com/photo-1533228100845-08145b01de14?q=80&w=1200&auto=format&fit=crop" alt="Recommendations view" /><figcaption>Recommendations</figcaption></GalleryItem>
+          <GalleryItem><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Dashboard view" /><figcaption>Dashboard</figcaption></GalleryItem>
+          <GalleryItem><img src="https://plus.unsplash.com/premium_photo-1733317302666-82fb00a68109?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Alerts view" /><figcaption>Alerts</figcaption></GalleryItem>
+          <GalleryItem><img src="https://plus.unsplash.com/premium_photo-1738585039709-c6e96e07fc93?q=80&w=1267&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Recommendations view" /><figcaption>Recommendations</figcaption></GalleryItem>
           <GalleryItem><img src="https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1200&auto=format&fit=crop" alt="Reports view" /><figcaption>Reports</figcaption></GalleryItem>
         </GalleryGrid>
       </SectionContainer>
