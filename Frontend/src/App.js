@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import './App.css';
-import { Routes, Route, Link, useNavigate,useParams  } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useParams, Navigate } from 'react-router-dom';
 import NavIcons from './NavIcons';
 import Help from './Help';
 import About from './About';
@@ -23,98 +23,383 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
+  RadarChart,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar
 } from "recharts";
 import Contact from './Contact';
 
-// LocalStorage-based auth helpers
-const USERS_KEY = 'learnlytics_users';
+// Auth helpers
 const SESSION_KEY = 'learnlytics_session';
+const API_URL = 'http://localhost:5000/api/auth';
 
-function readUsersFromStorage(){
-  try { const raw = localStorage.getItem(USERS_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
-}
-function writeUsersToStorage(users){ localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
 function readSession(){
-  try { const raw = localStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  try { 
+    const raw = localStorage.getItem(SESSION_KEY); 
+    return raw ? JSON.parse(raw) : null; 
+  } catch { 
+    return null; 
+  }
 }
-function writeSession(session){ localStorage.setItem(SESSION_KEY, JSON.stringify(session)); }
-function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+
+function writeSession(session){ 
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session)); 
+}
+
+function clearSession(){ 
+  localStorage.removeItem(SESSION_KEY); 
+}
+
+// Create Auth Context
+export const AuthContext = React.createContext();
 
 function App() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(() => readSession());
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Check if user is authenticated
   useEffect(() => {
-    const onStorage = (e) => { if (e.key === SESSION_KEY) setCurrentUser(readSession()); };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+    const checkAuth = async () => {
+      const session = readSession();
+      console.log('Session from localStorage:', session);
+      
+      if (session?.token) {
+        try {
+          console.log('Verifying token with backend...');
+          // Verify token with backend
+          const response = await fetch(`${API_URL}/me`, {
+            headers: {
+              'x-auth-token': session.token,
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('User data from /me:', userData);
+            
+            // Ensure we have the required user data
+            if (userData && userData.user) {
+              const updatedUser = {
+                ...session,
+                ...userData.user,
+                token: session.token // Make sure token is preserved
+              };
+              console.log('Setting current user:', updatedUser);
+              setCurrentUser(updatedUser);
+              
+              // Update the session with fresh data
+              writeSession(updatedUser);
+            } else {
+              throw new Error('Invalid user data received from server');
+            }
+          } else {
+            console.log('Token verification failed, clearing session');
+            clearSession();
+            setCurrentUser(null);
+            navigate('/login');
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          clearSession();
+          setCurrentUser(null);
+          navigate('/login');
+        }
+      } else {
+        console.log('No session found, redirecting to login');
+        setCurrentUser(null);
+        if (window.location.pathname !== '/login' && 
+            window.location.pathname !== '/register' && 
+            window.location.pathname !== '/') {
+          navigate('/login');
+        }
+      }
+      setIsLoading(false);
+    };
+
+    // Call checkAuth when component mounts
+    checkAuth();
+
+    // Set up a timer to check auth status periodically
+    const authCheckInterval = setInterval(checkAuth, 5 * 60 * 1000); // Check every 5 minutes
+
+    // Clean up interval on component unmount
+    return () => clearInterval(authCheckInterval);
+  }, [navigate]);
+
+  // Handle login
+  const login = async (token, userData) => {
+    try {
+      console.log('1. Starting login process with data:', { token, userData });
+      
+      if (!token || !userData) {
+        throw new Error('Token or user data is missing');
+      }
+      
+      // Create user session object
+      const userSession = {
+        token,
+        email: userData.email,
+        role: userData.role,
+        name: userData.name,
+        id: userData.id || userData._id,
+        _id: userData._id // Ensure _id is included for MongoDB compatibility
+      };
+      
+      console.log('2. Saving session to localStorage:', userSession);
+      // Save session to localStorage
+      writeSession(userSession);
+      
+      console.log('3. Updating current user state');
+      // Update current user state
+      setCurrentUser(userSession);
+      
+      console.log('4. Starting auth verification');
+      // Force a re-render and auth check
+      const checkAuth = async () => {
+        try {
+          console.log('5. Making request to /me endpoint');
+          const response = await fetch(`${API_URL}/me`, {
+            method: 'GET',
+            headers: {
+              'x-auth-token': token,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include',
+            mode: 'cors'
+          });
+          
+          console.log('6. Received response from /me:', response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('7. Auth verification successful:', data);
+            
+            if (!data.user) {
+              throw new Error('User data not found in response');
+            }
+            
+            // Update with complete user data
+            const updatedUser = {
+              ...userSession,
+              ...data.user
+            };
+            
+            console.log('8. Updating session with user data');
+            writeSession(updatedUser);
+            setCurrentUser(updatedUser);
+            
+            console.log('9. Current user after update:', updatedUser);
+            console.log('10. Redirecting based on role:', updatedUser.role);
+            
+            // Redirect based on role
+            if (updatedUser.role === 'instructor') {
+              console.log('11. Navigating to instructor dashboard');
+              navigate('/dashboard-instructor');
+            } else {
+              console.log('11. Navigating to student overview');
+              navigate('/overview');
+            }
+          } else {
+            throw new Error('Failed to verify authentication');
+          }
+        } catch (error) {
+          console.error('Auth verification failed:', error);
+          clearSession();
+          setCurrentUser(null);
+          navigate('/login');
+        }
+      };
+      
+      // Perform auth check
+      await checkAuth();
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Handle login error
+    }
+  };
+
+  // Handle logout
+  const logout = () => {
+    clearSession();
+    setCurrentUser(null);
+    navigate('/login');
+  };
+
+  // Protected Route component
+  const ProtectedRoute = ({ children, roles = [] }) => {
+    if (isLoading) {
+      return <div className="loading">Loading...</div>;
+    }
+
+    if (!currentUser) {
+      return <Navigate to="/login" replace />;
+    }
+
+    if (roles.length > 0 && !roles.includes(currentUser.role)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+
+    return children;
+  };
+
+  // Public Route component
+  const PublicRoute = ({ children }) => {
+    if (isLoading) {
+      return <div className="loading">Loading...</div>;
+    }
+
+    if (currentUser) {
+      return <Navigate to={currentUser.role === 'instructor' ? '/dashboard-instructor' : '/overview'} replace />;
+    }
+
+    return children;
+  };
 
   const handleLogout = () => { clearSession(); setCurrentUser(null); navigate('/'); };
   const goToDashboard = () => { if (!currentUser) return; currentUser.role === 'instructor' ? navigate('/dashboard-instructor') : navigate('/dashboard-student'); };
   // Check if we're on a dashboard page
   const isDashboardPage = window.location.pathname.includes('/dashboard-');
 
-  return (
-    <div className="site">
-      {!isDashboardPage && (
-      <nav className="navbar">
-        <div className="container nav-inner">
-          <div className="brand">
-            <span className="logo-shield" aria-hidden="true">🛡️</span>
-            <span className="brand-text">Learnlytics</span>
-          </div>
-          <ul className="nav-links">
-            <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
-            <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
-            <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
-            <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
-          </ul>
-          <div className="auth-actions">
-            {!currentUser ? (
-              <>
-                <button className="btn ghost" onClick={() => navigate('/login')}>Login</button>
-                <button className="btn primary" onClick={() => navigate('/register')}>Sign Up</button>
-              </>
-            ) : (
-              <>
-                <button className="btn primary" onClick={goToDashboard}>Dashboard</button>
-                <button className="btn ghost" onClick={handleLogout}>Logout</button>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
-      )}
+  // Provide auth context to all components
+  const authContextValue = {
+    currentUser,
+    login,
+    logout,
+    isAuthenticated: !!currentUser
+  };
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot" element={<ForgotPasswordPage />} />
-        <Route path="/icons" element={<NavIcons />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/resources" element={<Resources />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/help" element={<Help />} />
-        <Route path="/dashboard-student" element={<OverviewPage />} />
-        <Route path="/dashboard-instructor" element={<InstructorDashboard />} />
-        <Route path="/feedback" element={<FeedbackPage />} />
-        <Route path="/weekly-report" element={<WeeklyReport />} />
-        <Route path="/overview" element={<OverviewPage />} />
-        <Route path="/risk-status" element={<RiskStatusPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/my-instructors" element={<MyInstructorsPage />} />
-        <Route path="/recommendation/:topic" element={<RecommendationPage />} />
-        <Route path="/schedule" element={<SchedulePage />} />
-        <Route path="/course-analysis" element={<CourseAnalysisPage />} />
-        <Route path="/academic-performance" element={<AcademicPerformancePage />} />
-        <Route path="/my-students" element={<MyStudentsPage />} />
-        <Route path="/Studentresources" element={<ResourcesPage />} />
-        <Route path="/insoverview" element={<InstructorDashboard />} />
-      </Routes>
-    </div>
+  return (
+    <AuthContext.Provider value={authContextValue}>
+      <div className="site">
+        {!isDashboardPage && (
+          <nav className="navbar">
+            <div className="container nav-inner">
+              <div className="brand">
+                <span className="logo-shield" aria-hidden="true">🛡️</span>
+                <span className="brand-text">Learnlytics</span>
+              </div>
+              <ul className="nav-links">
+                <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
+                <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
+                <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
+                <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
+              </ul>
+              <div className="auth-actions">
+                {!currentUser ? (
+                  <>
+                    <button className="btn ghost" onClick={() => navigate('/login')}>Login</button>
+                    <button className="btn primary" onClick={() => navigate('/register')}>Sign Up</button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn primary" onClick={goToDashboard}>Dashboard</button>
+                    <button className="btn ghost" onClick={handleLogout}>Logout</button>
+                  </>
+                )}
+              </div>
+            </div>
+          </nav>
+        )}
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          } />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot" element={<ForgotPasswordPage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/help" element={<Help />} />
+
+          {/* Protected Routes */}
+          <Route path="/dashboard-student" element={
+            <ProtectedRoute>
+              <OverviewPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard-instructor" element={
+            <ProtectedRoute roles={['instructor']}>
+              <InstructorDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/feedback" element={
+            <ProtectedRoute>
+              <FeedbackPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/weekly-report" element={
+            <ProtectedRoute>
+              <WeeklyReport />
+            </ProtectedRoute>
+          } />
+          <Route path="/overview" element={
+            <ProtectedRoute>
+              <OverviewPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/risk-status" element={
+            <ProtectedRoute>
+              <RiskStatusPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-instructors" element={
+            <ProtectedRoute>
+              <MyInstructorsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recommendation/:topic" element={
+            <ProtectedRoute>
+              <RecommendationPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/schedule" element={
+            <ProtectedRoute>
+              <SchedulePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/course-analysis" element={
+            <ProtectedRoute>
+              <CourseAnalysisPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/academic-performance" element={
+            <ProtectedRoute>
+              <AcademicPerformancePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-students" element={
+            <ProtectedRoute roles={['instructor']}>
+              <MyStudentsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/Studentresources" element={
+            <ProtectedRoute>
+              <ResourcesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/insoverview" element={
+            <ProtectedRoute roles={['instructor']}>
+              <InstructorDashboard />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
+    </AuthContext.Provider>
   );
 }
 
@@ -1528,29 +1813,80 @@ function AIChatbotModal({ isOpen, onClose }) {
 }
 
 function LoginPage(){
-  const [role,setRole] = useState('student');
+  const [role, setRole] = useState('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
+
   useEffect(() => {
     const session = readSession();
     if (session) {
-      if (session.role === 'instructor') navigate('/dashboard-instructor');
-      else navigate('/overview');
+      if (session.role === 'instructor') {
+        navigate('/dashboard-instructor');
+      } else {
+        navigate('/overview');
+      }
     }
   }, [navigate]);
-  const onSubmit = (e) => {
+
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const users = readUsersFromStorage();
-    const user = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
-    if (!user) { setError('Email does not exist'); return; }
-    if (user.password !== password) { setError('Incorrect password'); return; }
-    if (role && user.role !== role) { setError(`This account is registered as ${user.role}.`); return; }
-    writeSession({ email: user.email, role: user.role, name: user.name || '' });
-    if (user.role === 'instructor') navigate('/dashboard-instructor');
-    else navigate('/overview');
+    setIsLoading(true);
+    console.log('Login form submitted with:', { email, role });
+
+    try {
+      console.log('1. Sending login request to server...');
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, role })
+      });
+
+      console.log('2. Received response status:', response.status);
+      const data = await response.json().catch(err => {
+        console.error('Failed to parse JSON response:', err);
+        throw new Error('Invalid server response');
+      });
+      
+      console.log('3. Response data:', data);
+
+      if (!response.ok) {
+        const errorMsg = data.message || 'Login failed';
+        console.error('4. Login failed:', errorMsg);
+        
+        // Handle role mismatch specifically
+        if (response.status === 403) {
+          throw new Error(`Please log in as a ${data.message?.split(' ').pop() || 'different role'}`);
+        }
+        
+        throw new Error(errorMsg);
+      }
+
+      if (!data.token || !data.user) {
+        console.error('5. Invalid response data:', data);
+        throw new Error('Invalid response from server: Missing token or user data');
+      }
+
+      console.log('6. Calling login function with token and user data');
+      // Use the login function from AuthContext to update the auth state
+      try {
+        await login(data.token, data.user);
+        console.log('7. Login function completed successfully');
+      } catch (loginError) {
+        console.error('7. Error in login function:', loginError);
+        throw new Error('Failed to complete login process');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'Login failed. Please check your credentials and try again.');
+      setIsLoading(false);
+    }
   };
   return (
     <div className="auth-screen">
@@ -1583,40 +1919,100 @@ function LoginPage(){
 }
 
 function RegisterPage(){
-  const [role,setRole] = useState('student');
+  const [role, setRole] = useState('student');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
   useEffect(() => {
     const session = readSession();
     if (session) {
       if (session.role === 'instructor') navigate('/dashboard-instructor');
-      else navigate('/dashboard-student');
+      else navigate('/overview');
     }
   }, [navigate]);
-  const onSubmit = (e) => {
+
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    if (!name.trim()) { setError('Please enter your full name'); return; }
+    
+    // Basic validation
+    if (!name.trim()) { 
+      setError('Please enter your full name'); 
+      return; 
+    }
+    
     const emailTrimmed = email.trim().toLowerCase();
-    const emailValid = /.+@.+\..+/.test(emailTrimmed);
-    if (!emailValid) { setError('Please enter a valid email'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
-    if (password !== confirmPassword) { setError('Passwords do not match'); return; }
-    const users = readUsersFromStorage();
-    const exists = users.some(u => u.email.toLowerCase() === emailTrimmed);
-    if (exists) { setError('An account with this email already exists'); return; }
-    const newUser = { name: name.trim(), email: emailTrimmed, password, role };
-    writeUsersToStorage([...users, newUser]);
-    writeSession({ email: newUser.email, role: newUser.role, name: newUser.name });
-    setSuccess('Account created successfully');
-    if (role === 'instructor') navigate('/dashboard-instructor');
-    else navigate('/dashboard-student');
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed);
+    
+    if (!emailValid) { 
+      setError('Please enter a valid email'); 
+      return; 
+    }
+    
+    if (password.length < 6) { 
+      setError('Password must be at least 6 characters'); 
+      return; 
+    }
+    
+    if (password !== confirmPassword) { 
+      setError('Passwords do not match'); 
+      return; 
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: emailTrimmed,
+          password,
+          role
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      // Save the token and user data in session
+      writeSession({
+        token: data.token,
+        email: data.user.email,
+        role: data.user.role,
+        name: data.user.name,
+        id: data.user.id
+      });
+
+      setSuccess('Account created successfully! Redirecting...');
+      
+      // Redirect based on role
+      setTimeout(() => {
+        if (role === 'instructor') {
+          navigate('/dashboard-instructor');
+        } else {
+          navigate('/overview');
+        }
+      }, 1500);
+      
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
   return (
     <div className="auth-screen">
@@ -3978,6 +4374,29 @@ function CourseAnalysisPage() {
     </div>
   );
 }
+const performanceData = [
+  { week: 'Week 1', score: 75, grade: 'C' },
+  { week: 'Week 2', score: 78, grade: 'C+' },
+  { week: 'Week 3', score: 82, grade: 'B-' },
+  { week: 'Week 4', score: 85, grade: 'B' },
+  { week: 'Week 5', score: 80, grade: 'B-' },
+  { week: 'Week 6', score: 88, grade: 'B+' },
+  { week: 'Week 7', score: 82, grade: 'B-' },
+];
+
+const subjectData = [
+  { subject: 'Math', score: 88, fullMark: 100 },
+  { subject: 'Physics', score: 75, fullMark: 100 },
+  { subject: 'History', score: 92, fullMark: 100 },
+  { subject: 'English', score: 85, fullMark: 100 },
+];
+
+const assessmentData = [
+  { name: 'Quizzes', score: 85 },
+  { name: 'Homework', score: 90 },
+  { name: 'Midterm', score: 78 },
+  { name: 'Final Exam', score: 82 },
+];
 function AcademicPerformancePage() {
   const session = readSession();
   const navigate = useNavigate();
@@ -3987,7 +4406,7 @@ function AcademicPerformancePage() {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
+      {/* Sidebar - Retained from original code */}
       <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -4089,15 +4508,97 @@ function AcademicPerformancePage() {
 
         <div className="dashboard-container">
           <div className="dashboard-section">
-            <h2>Academic Performance Overview</h2>
+            <h2 className="section-title">Academic Performance Overview</h2>
+            <p className="section-description">A quick snapshot of your academic standing with key metrics.</p>
             <div className="performance-metrics">
               <div className="metric-card">
-                <h3>Overall GPA</h3>
-                <p>3.8/4.0</p>
+                <div className="icon"><i className="fas fa-graduation-cap"></i></div>
+                <div className="metric-info">
+                  <h3>Overall GPA</h3>
+                  <p className="metric-value">3.8/4.0</p>
+                </div>
               </div>
               <div className="metric-card">
-                <h3>Attendance Rate</h3>
-                <p>95%</p>
+                <div className="icon"><i className="fas fa-user-check"></i></div>
+                <div className="metric-info">
+                  <h3>Attendance Rate</h3>
+                  <p className="metric-value">95%</p>
+                </div>
+              </div>
+              <div className="metric-card">
+                <div className="icon"><i className="fas fa-star-half-alt"></i></div>
+                <div className="metric-info">
+                  <h3>Current Grade</h3>
+                  <p className="metric-value">B+</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="dashboard-section">
+            <h2 className="section-title">Performance Trends & Insights</h2>
+            <p className="section-description">Dive deeper into your academic data with interactive graphs and analytics.</p>
+            <div className="chart-container">
+              <div className="chart-card">
+                <h3>Course Performance Trends</h3>
+                <p className="chart-description">Track your grades in each subject over the semester to identify areas of improvement.</p>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={performanceData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e6ec" />
+                    <XAxis dataKey="week" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="score" stroke="#4c6ef5" strokeWidth={2} activeDot={{ r: 8 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="chart-card">
+                <h3>Subject-Wise Performance</h3>
+                <p className="chart-description">Compare your average scores across different subjects to see your strengths and weaknesses.</p>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={subjectData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e6ec" />
+                    <XAxis dataKey="subject" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="score" fill="#a770ef" barSize={30} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="chart-card">
+                <h3>Quiz vs. Exam Performance</h3>
+                <p className="chart-description">Analyze your average score by assignment type (quizzes, exams, homework, etc.).</p>
+                <ResponsiveContainer width="100%" height={250}>
+                  <RadarChart data={assessmentData}>
+                    <PolarGrid stroke="#e0e6ec" />
+                    <PolarAngleAxis dataKey="name" />
+                    <PolarRadiusAxis angle={90} domain={[0, 100]} />
+                    <Radar name="Performance" dataKey="score" stroke="#2575fc" fill="#2575fc" fillOpacity={0.6} />
+                    <Tooltip />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+          
+          <div className="dashboard-section">
+            <h2 className="section-title">Actionable Insights</h2>
+            <p className="section-description">Based on your data, here are some personalized recommendations.</p>
+            <div className="insights-card">
+              <div className="insight-item">
+                <h4>What's Your Trend?</h4>
+                <p>Your performance has been consistently **improving** over the last few weeks. Keep up the great work!</p>
+              </div>
+              <div className="insight-item">
+                <h4>Where to Focus</h4>
+                <p>Your scores in **Physics** have shown a slight dip. We recommend focusing on chapters 5 and 6 and reviewing the **Video Tutorials** in your Resources tab.</p>
+              </div>
+              <div className="insight-item">
+                <h4>Next Steps</h4>
+                <p>Consider taking a **Practice Quiz** in your most challenging subject to prepare for your upcoming exam.</p>
+                <button className="btn primary-btn">Take a Practice Quiz</button>
               </div>
             </div>
           </div>
@@ -4106,6 +4607,7 @@ function AcademicPerformancePage() {
     </div>
   );
 }
+
 const resourcesData = {
   'Video Lectures': {
     'Mathematics': [
