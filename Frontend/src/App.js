@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import './App.css';
-import { Routes, Route, Link, useNavigate, useParams, Navigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as Router, NavLink, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import NavIcons from './NavIcons';
+import Profile from './components/Profile';
 import Help from './Help';
 import About from './About';
 import Resources from './Resources';
@@ -33,10 +35,11 @@ import {
 import Contact from './Contact';
 
 // Auth helpers
-const SESSION_KEY = 'learnlytics_session';
-const API_URL = 'http://localhost:5000/api/auth';
+export const SESSION_KEY = 'learnlytics_session';
+export const API_URL = 'http://localhost:5000/api/auth';
 
-function readSession(){
+
+export function readSession(){
   try { 
     const raw = localStorage.getItem(SESSION_KEY); 
     return raw ? JSON.parse(raw) : null; 
@@ -45,11 +48,11 @@ function readSession(){
   }
 }
 
-function writeSession(session){ 
+export function writeSession(session){ 
   localStorage.setItem(SESSION_KEY, JSON.stringify(session)); 
 }
 
-function clearSession(){ 
+export function clearSession(){ 
   localStorage.removeItem(SESSION_KEY); 
 }
 
@@ -65,12 +68,8 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       const session = readSession();
-      console.log('Session from localStorage:', session);
-      
       if (session?.token) {
         try {
-          console.log('Verifying token with backend...');
-          // Verify token with backend
           const response = await fetch(`${API_URL}/me`, {
             headers: {
               'x-auth-token': session.token,
@@ -81,56 +80,38 @@ function App() {
           
           if (response.ok) {
             const userData = await response.json();
-            console.log('User data from /me:', userData);
-            
-            // Ensure we have the required user data
             if (userData && userData.user) {
               const updatedUser = {
                 ...session,
                 ...userData.user,
-                token: session.token // Make sure token is preserved
+                token: session.token
               };
-              console.log('Setting current user:', updatedUser);
               setCurrentUser(updatedUser);
-              
-              // Update the session with fresh data
               writeSession(updatedUser);
             } else {
-              throw new Error('Invalid user data received from server');
+              // Don't clear session if server response is invalid, might be a temporary issue
+              console.error('Invalid user data received from server');
             }
           } else {
-            console.log('Token verification failed, clearing session');
+            // Token is invalid, clear session
             clearSession();
             setCurrentUser(null);
-            navigate('/login');
           }
         } catch (error) {
           console.error('Auth check failed:', error);
           clearSession();
           setCurrentUser(null);
-          navigate('/login');
         }
       } else {
-        console.log('No session found, redirecting to login');
         setCurrentUser(null);
-        if (window.location.pathname !== '/login' && 
-            window.location.pathname !== '/register' && 
-            window.location.pathname !== '/') {
-          navigate('/login');
-        }
       }
       setIsLoading(false);
     };
 
-    // Call checkAuth when component mounts
     checkAuth();
-
-    // Set up a timer to check auth status periodically
-    const authCheckInterval = setInterval(checkAuth, 5 * 60 * 1000); // Check every 5 minutes
-
-    // Clean up interval on component unmount
+    const authCheckInterval = setInterval(checkAuth, 5 * 60 * 1000);
     return () => clearInterval(authCheckInterval);
-  }, [navigate]);
+  }, []);
 
   // Handle login
   const login = async (token, userData) => {
@@ -138,8 +119,12 @@ function App() {
       console.log('1. Starting login process with data:', { token, userData });
       
       if (!token || !userData) {
+        console.error('Login failed: Token or user data is missing');
         throw new Error('Token or user data is missing');
       }
+      
+      console.log('1.1 Verifying token format:', token.substring(0, 10) + '...');
+      console.log('1.2 User data received:', JSON.stringify(userData, null, 2));
       
       // Create user session object
       const userSession = {
@@ -151,7 +136,7 @@ function App() {
         _id: userData._id // Ensure _id is included for MongoDB compatibility
       };
       
-      console.log('2. Saving session to localStorage:', userSession);
+      
       // Save session to localStorage
       writeSession(userSession);
       
@@ -196,16 +181,8 @@ function App() {
             setCurrentUser(updatedUser);
             
             console.log('9. Current user after update:', updatedUser);
-            console.log('10. Redirecting based on role:', updatedUser.role);
-            
-            // Redirect based on role
-            if (updatedUser.role === 'instructor') {
-              console.log('11. Navigating to instructor dashboard');
-              navigate('/dashboard-instructor');
-            } else {
-              console.log('11. Navigating to student overview');
-              navigate('/overview');
-            }
+            // The user will be navigated to the appropriate page by other components or user actions.
+            // Removing forced navigation to allow access to pages like /profile immediately after login.
           } else {
             throw new Error('Failed to verify authentication');
           }
@@ -234,12 +211,14 @@ function App() {
 
   // Protected Route component
   const ProtectedRoute = ({ children, roles = [] }) => {
+    const location = useLocation();
+
     if (isLoading) {
-      return <div className="loading">Loading...</div>;
+      return <div>Loading...</div>; // Simple loading indicator
     }
 
     if (!currentUser) {
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     if (roles.length > 0 && !roles.includes(currentUser.role)) {
@@ -263,7 +242,6 @@ function App() {
   };
 
   const handleLogout = () => { clearSession(); setCurrentUser(null); navigate('/'); };
-  const goToDashboard = () => { if (!currentUser) return; currentUser.role === 'instructor' ? navigate('/dashboard-instructor') : navigate('/dashboard-student'); };
   // Check if we're on a dashboard page
   const isDashboardPage = window.location.pathname.includes('/dashboard-');
 
@@ -299,7 +277,7 @@ function App() {
                   </>
                 ) : (
                   <>
-                    <button className="btn primary" onClick={goToDashboard}>Dashboard</button>
+                    <button className="btn primary" onClick={() => navigate(currentUser.role === 'instructor' ? '/dashboard-instructor' : '/overview')}>Dashboard</button>
                     <button className="btn ghost" onClick={handleLogout}>Logout</button>
                   </>
                 )}
@@ -307,25 +285,34 @@ function App() {
             </div>
           </nav>
         )}
+
         <Routes>
-          {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/help" element={<Help />} />
+          
+          {/* Auth Routes */}
           <Route path="/login" element={
             <PublicRoute>
               <LoginPage />
             </PublicRoute>
           } />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot" element={<ForgotPasswordPage />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/help" element={<Help />} />
+          <Route path="/register" element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          } />
 
           {/* Protected Routes */}
-          <Route path="/dashboard-student" element={
+          <Route path="/overview" element={
             <ProtectedRoute>
               <OverviewPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile user={currentUser} />
             </ProtectedRoute>
           } />
           <Route path="/dashboard-instructor" element={
@@ -343,19 +330,9 @@ function App() {
               <WeeklyReport />
             </ProtectedRoute>
           } />
-          <Route path="/overview" element={
-            <ProtectedRoute>
-              <OverviewPage />
-            </ProtectedRoute>
-          } />
           <Route path="/risk-status" element={
             <ProtectedRoute>
               <RiskStatusPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <ProfilePage />
             </ProtectedRoute>
           } />
           <Route path="/my-instructors" element={
@@ -1822,16 +1799,6 @@ function LoginPage(){
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  useEffect(() => {
-    const session = readSession();
-    if (session) {
-      if (session.role === 'instructor') {
-        navigate('/dashboard-instructor');
-      } else {
-        navigate('/overview');
-      }
-    }
-  }, [navigate]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -2176,42 +2143,42 @@ function OverviewPage() {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item active">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -2566,44 +2533,44 @@ function RiskStatusPage() {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item active">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -2927,776 +2894,7 @@ function RiskStatusPage() {
   );
 }
 
-function ProfilePage() {
-  const session = readSession();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingSection, setEditingSection] = useState(null);
-  const [profileData, setProfileData] = useState({
-    personal: {
-      fullName: 'John Doe',
-      dateOfBirth: 'March 15, 2002',
-      gender: 'Male',
-      AdhaarNumber: '1234-5678-9012',
-      Category: 'Gen'
-    },
-    contact: {
-      email: 'john.doe@university.edu',
-      phone: '+1 (555) 123-4567',
-      address: '123 University Ave, Campus City, ST 12345',
-      emergencyContact: 'Jane Doe (Mother) - +1 (555) 987-6543'
-    },
-    academic: {
-      program: 'Bachelor of Computer Science',
-      major: 'Computer Science',
-      minor: 'Mathematics',
-      year: '3rd Year (Junior)',
-      semester: 'Fall 2024',
-      expectedGraduation: 'May 2025',
-      gpa: '3.85',
-      creditsCompleted: '87',
-      creditsThisSemester: '15',
-      academicStanding: 'Good Standing',
-      deansList: '4 Semesters',
-      honorSociety: 'Phi Beta Kappa'
-    },
-    communication: {
-      emailNotifications: true,
-      smsAlerts: false,
-      pushNotifications: true,
-      primaryMethod: 'email',
-      secondaryMethod: 'phone',
-      tertiaryMethod: 'portal'
-    },
-    emergency: {
-      primaryContact: {
-        name: 'Jane Doe',
-        relation: 'Mother',
-        phone: '+1 (555) 987-6543'
-      },
-      secondaryContact: {
-        name: 'Robert Doe',
-        relation: 'Father',
-        phone: '+1 (555) 987-6544'
-      },
-      medical: {
-        bloodType: 'O+',
-        allergies: 'None Known',
-        conditions: 'None',
-        insurance: 'University Health Plan'
-      }
-    }
-  });
 
-  useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
-
-  const handleEditProfile = () => {
-    setIsEditing(true);
-  };
-
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    setEditingSection(null);
-    // Here you would typically save to backend
-    console.log('Profile saved:', profileData);
-    alert('Profile updated successfully!');
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditingSection(null);
-  };
-
-  const handleEditSection = (section) => {
-    setEditingSection(section);
-  };
-
-  const handleInputChange = (section, field, value) => {
-    setProfileData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
-      }
-    }));
-  };
-
-  const handleNestedInputChange = (section, subsection, field, value) => {
-    setProfileData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [subsection]: {
-          ...prev[section][subsection],
-          [field]: value
-        }
-      }
-    }));
-  };
-
-  const handleDownloadCV = () => {
-    // Create a simple CV download
-    const cvContent = `
-Name: ${profileData.personal.fullName}
-Email: ${profileData.contact.email}
-Phone: ${profileData.contact.phone}
-Program: ${profileData.academic.program}
-GPA: ${profileData.academic.gpa}/4.0
-Expected Graduation: ${profileData.academic.expectedGraduation}
-    `;
-    
-    const blob = new Blob([cvContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${profileData.personal.fullName.replace(' ', '_')}_CV.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  };
-
-  const handleShareProfile = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${profileData.personal.fullName} - Student Profile`,
-        text: `Check out ${profileData.personal.fullName}'s academic profile`,
-        url: window.location.href
-      });
-    } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href);
-      alert('Profile link copied to clipboard!');
-    }
-  };
-
-  const handlePhotoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        // Here you would typically upload to server
-        console.log('Photo uploaded:', file.name);
-        alert('Photo uploaded successfully!');
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleToggleNotification = (type) => {
-    setProfileData(prev => ({
-      ...prev,
-      communication: {
-        ...prev.communication,
-        [type]: !prev.communication[type]
-      }
-    }));
-  };
-
-  return (
-    <div className="dashboard-layout">
-      {/* Sidebar */}
-      <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-header">
-          <div className="sidebar-brand">
-            <div className="logo-shield">L</div>
-            <span className="brand-text">Learnlytics</span>
-          </div>
-          <button 
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            {sidebarOpen ? '←' : '→'}
-          </button>
-        </div>
-        
-        <div className="sidebar-profile">
-          <div className="profile-avatar">
-            {(session?.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase()}
-          </div>
-          <div className="profile-info">
-            <h4>{session?.name || 'Student'}</h4>
-            <p>Student</p>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
-              <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
-              <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item active">
-              <span className="nav-text">Profile</span>
-            </Link>
-          </div>
-          
-          <div className="nav-section">
-            <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
-              <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
-              <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
-              <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
-              <span className="nav-text">Academic Performance</span>
-            </Link>
-          </div>
-          
-          <div className="nav-section">
-            <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
-              <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
-              <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
-              <span className="nav-text">Weekly Report</span>
-            </Link>
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <button 
-            className="logout-btn"
-            onClick={() => {
-              clearSession();
-              navigate('/');
-            }}
-          >
-            <span className="nav-text">Logout</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className={`dashboard-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        <div className="dashboard-header">
-          <div className="header-left">
-            <button 
-              className="mobile-sidebar-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <span className="hamburger">
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
-            </button>
-            <h1>Profile</h1>
-          </div>
-        </div>
-
-        <div className="dashboard-container">
-          {/* Profile Header */}
-          <div className="dashboard-section">
-            <div className="profile-header">
-              <div className="profile-photo-section">
-                <div className="profile-photo-large">
-                  <img 
-                    src="https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?q=80&w=1985&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                    alt="Student Photo" 
-                    className="profile-image"
-                  />
-                  <div className="photo-upload-overlay">
-                    <label className="upload-btn">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        style={{ display: 'none' }}
-                      />
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V5C1 4.46957 1.21071 3.96086 1.58579 3.58579C1.96086 3.21071 2.46957 3 3 3H16L23 10V19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M23 10H16V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      Change Photo
-                    </label>
-                  </div>
-                </div>
-                <div className="profile-status">
-                  <div className="status-indicator active"></div>
-                  <span>Active Student</span>
-                </div>
-              </div>
-              <div className="profile-basic-info">
-                {editingSection === 'header' ? (
-                  <div className="editable-field">
-                    <input
-                      type="text"
-                      value={profileData.personal.fullName}
-                      onChange={(e) => handleInputChange('personal', 'fullName', e.target.value)}
-                      className="edit-input"
-                    />
-                  </div>
-                ) : (
-                  <h1>{profileData.personal.fullName}</h1>
-                )}
-                <p className="student-id">Student ID: CS2024001</p>
-                <p className="academic-level">{profileData.academic.year} • {profileData.academic.major} • {profileData.academic.semester}</p>
-                <div className="profile-badges">
-                  <span className="badge academic">Dean's List</span>
-                  <span className="badge achievement">Honor Student</span>
-                  <span className="badge activity">Active Member</span>
-                </div>
-              </div>
-              <div className="profile-actions">
-                {isEditing ? (
-                  <>
-                    <button className="btn primary" onClick={handleSaveProfile}>Save Changes</button>
-                    <button className="btn ghost" onClick={handleCancelEdit}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button className="btn primary" onClick={handleEditProfile}>Edit Profile</button>
-                    <button className="btn ghost" onClick={handleDownloadCV}>Download CV</button>
-                    <button className="btn ghost" onClick={handleShareProfile}>Share Profile</button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Personal Information */}
-          <div className="dashboard-section">
-            <h2>Personal Information</h2>
-            <div className="info-grid">
-              <div className="info-card">
-                <div className="info-header">
-                  <h3>Basic Details</h3>
-                  <button 
-                    className="edit-icon"
-                    onClick={() => handleEditSection(editingSection === 'personal' ? null : 'personal')}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M18.5 2.5C18.8978 2.10218 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10218 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10218 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                <div className="info-content">
-                  <div className="info-item">
-                    <span className="info-label">Full Name</span>
-                    {editingSection === 'personal' ? (
-                      <input
-                        type="text"
-                        value={profileData.personal.fullName}
-                        onChange={(e) => handleInputChange('personal', 'fullName', e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      <span className="info-value">{profileData.personal.fullName}</span>
-                    )}
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Date of Birth</span>
-                    {editingSection === 'personal' ? (
-                      <input
-                        type="text"
-                        value={profileData.personal.dateOfBirth}
-                        onChange={(e) => handleInputChange('personal', 'dateOfBirth', e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      <span className="info-value">{profileData.personal.dateOfBirth}</span>
-                    )}
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Gender</span>
-                    {editingSection === 'personal' ? (
-                      <select
-                        value={profileData.personal.gender}
-                        onChange={(e) => handleInputChange('personal', 'gender', e.target.value)}
-                        className="edit-select"
-                      >
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    ) : (
-                      <span className="info-value">{profileData.personal.gender}</span>
-                    )}
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Aadhar Number</span>
-                    {editingSection === 'personal' ? (
-                      <input
-                        type="text"
-                        value={profileData.personal.adhaarNumber}
-                        onChange={(e) => handleInputChange('personal', 'adhaarNumber', e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      <span className="info-value">{profileData.personal.AdhaarNumber}</span>
-                    )}
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Category</span>
-                    {editingSection === 'personal' ? (
-                      <select
-                        value={profileData.personal.Category}
-                        onChange={(e) => handleInputChange('personal', 'Category', e.target.value)}
-                        className="edit-select"
-                      >
-                        <option value="Gen">GEN</option>
-                        <option value="SC/ST">SC/ST</option>
-                        <option value="OBC">OBC</option>
-                        <option value="Other">Other</option>
-                        
-                      </select>
-                    ) : (
-                      <span className="info-value">{profileData.personal.Category}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="info-card">
-                <div className="info-header">
-                  <h3>Contact Information</h3>
-                  <button 
-                    className="edit-icon"
-                    onClick={() => handleEditSection(editingSection === 'contact' ? null : 'contact')}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M18.5 2.5C18.8978 2.10218 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10218 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10218 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                <div className="info-content">
-                  <div className="info-item">
-                    <span className="info-label">Email</span>
-                    {editingSection === 'contact' ? (
-                      <input
-                        type="email"
-                        value={profileData.contact.email}
-                        onChange={(e) => handleInputChange('contact', 'email', e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      <span className="info-value">{profileData.contact.email}</span>
-                    )}
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Phone</span>
-                    {editingSection === 'contact' ? (
-                      <input
-                        type="tel"
-                        value={profileData.contact.phone}
-                        onChange={(e) => handleInputChange('contact', 'phone', e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      <span className="info-value">{profileData.contact.phone}</span>
-                    )}
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Address</span>
-                    {editingSection === 'contact' ? (
-                      <textarea
-                        value={profileData.contact.address}
-                        onChange={(e) => handleInputChange('contact', 'address', e.target.value)}
-                        className="edit-textarea"
-                        rows="2"
-                      />
-                    ) : (
-                      <span className="info-value">{profileData.contact.address}</span>
-                    )}
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Emergency Contact</span>
-                    {editingSection === 'contact' ? (
-                      <input
-                        type="text"
-                        value={profileData.contact.emergencyContact}
-                        onChange={(e) => handleInputChange('contact', 'emergencyContact', e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      <span className="info-value">{profileData.contact.emergencyContact}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Academic Information */}
-          <div className="dashboard-section">
-            <h2>Academic Information</h2>
-            <div className="academic-grid">
-              <div className="academic-card">
-                <div className="academic-header">
-                  <h3>Current Academic Status</h3>
-                  <span className="status-badge enrolled">Enrolled</span>
-                </div>
-                <div className="academic-content">
-                  <div className="academic-item">
-                    <span className="academic-label">Program</span>
-                    <span className="academic-value">Bachelor of Computer Science</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Major</span>
-                    <span className="academic-value">Computer Science</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Minor</span>
-                    <span className="academic-value">Mathematics</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Year</span>
-                    <span className="academic-value">3rd Year (Junior)</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Semester</span>
-                    <span className="academic-value">Fall 2024</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Expected Graduation</span>
-                    <span className="academic-value">May 2025</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="academic-card">
-                <div className="academic-header">
-                  <h3>Academic Performance</h3>
-                  <span className="status-badge excellent">Excellent</span>
-                </div>
-                <div className="academic-content">
-                  <div className="academic-item">
-                    <span className="academic-label">Current GPA</span>
-                    <span className="academic-value gpa">3.85/4.0</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Credits Completed</span>
-                    <span className="academic-value">87/120</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Credits This Semester</span>
-                    <span className="academic-value">15</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Academic Standing</span>
-                    <span className="academic-value">Good Standing</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Dean's List</span>
-                    <span className="academic-value">4 Semesters</span>
-                  </div>
-                  <div className="academic-item">
-                    <span className="academic-label">Honor Society</span>
-                    <span className="academic-value">Phi Beta Kappa</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="academic-card">
-                <div className="academic-header">
-                  <h3>Current Courses</h3>
-                  <span className="status-badge active">5 Active</span>
-                </div>
-                <div className="courses-list">
-                  <div className="course-item">
-                    <div className="course-info">
-                      <span className="course-code">CS-301</span>
-                      <span className="course-name">Data Structures & Algorithms</span>
-                    </div>
-                    <span className="course-credits">3 Credits</span>
-                  </div>
-                  <div className="course-item">
-                    <div className="course-info">
-                      <span className="course-code">CS-302</span>
-                      <span className="course-name">Database Systems</span>
-                    </div>
-                    <span className="course-credits">3 Credits</span>
-                  </div>
-                  <div className="course-item">
-                    <div className="course-info">
-                      <span className="course-code">MATH-301</span>
-                      <span className="course-name">Linear Algebra</span>
-                    </div>
-                    <span className="course-credits">3 Credits</span>
-                  </div>
-                  <div className="course-item">
-                    <div className="course-info">
-                      <span className="course-code">CS-303</span>
-                      <span className="course-name">Software Engineering</span>
-                    </div>
-                    <span className="course-credits">3 Credits</span>
-                  </div>
-                  <div className="course-item">
-                    <div className="course-info">
-                      <span className="course-code">PHIL-201</span>
-                      <span className="course-name">Ethics in Technology</span>
-                    </div>
-                    <span className="course-credits">3 Credits</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Communication Preferences */}
-          <div className="dashboard-section">
-            <h2>Communication Preferences</h2>
-            <div className="communication-grid">
-              <div className="communication-card">
-                <h3>Notification Settings</h3>
-                <div className="notification-settings">
-                  <div className="setting-item">
-                    <div className="setting-info">
-                      <span className="setting-label">Email Notifications</span>
-                      <span className="setting-desc">Receive updates via email</span>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={profileData.communication.emailNotifications}
-                        onChange={() => handleToggleNotification('emailNotifications')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                  <div className="setting-item">
-                    <div className="setting-info">
-                      <span className="setting-label">SMS Alerts</span>
-                      <span className="setting-desc">Get urgent updates via SMS</span>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={profileData.communication.smsAlerts}
-                        onChange={() => handleToggleNotification('smsAlerts')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                  <div className="setting-item">
-                    <div className="setting-info">
-                      <span className="setting-label">Push Notifications</span>
-                      <span className="setting-desc">Mobile app notifications</span>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={profileData.communication.pushNotifications}
-                        onChange={() => handleToggleNotification('pushNotifications')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="communication-card">
-                <h3>Preferred Contact Methods</h3>
-                <div className="contact-methods">
-                  <div className="method-item">
-                    <div className="method-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 4H20C20.5304 4 21.0391 4.21071 21.4142 4.58579C21.7893 4.96086 22 5.46957 22 6V18C22 18.5304 21.7893 19.0391 21.4142 19.4142C21.0391 19.7893 20.5304 20 20 20H4C3.46957 20 2.96086 19.7893 2.58579 19.4142C2.21071 19.0391 2 18.5304 2 18V6C2 5.46957 2.21071 4.96086 2.58579 4.58579C2.96086 4.21071 3.46957 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div className="method-info">
-                      <span className="method-name">Email</span>
-                      <span className="method-value">Primary</span>
-                    </div>
-                  </div>
-                  <div className="method-item">
-                    <div className="method-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22 16.92V19.92C22.0011 20.1985 21.9441 20.4742 21.8325 20.7293C21.7209 20.9845 21.5573 21.2136 21.3521 21.4019C21.1468 21.5901 20.9046 21.7335 20.6407 21.8227C20.3769 21.9119 20.0974 21.9451 19.82 21.92C16.7428 21.5856 13.787 20.5341 11.19 18.85C8.77382 17.3147 6.72533 15.2662 5.19 12.85C3.49997 10.2412 2.44824 7.27099 2.12 4.18C2.095 3.90347 2.12787 3.62476 2.21649 3.36162C2.30512 3.09849 2.44756 2.85669 2.63476 2.65162C2.82196 2.44655 3.0498 2.28271 3.30379 2.17052C3.55777 2.05833 3.83233 2.00026 4.11 2H7.11C7.59531 1.99522 8.06691 2.16708 8.43388 2.48353C8.80085 2.79999 9.04207 3.23945 9.11 3.72C9.23662 4.68007 9.47144 5.62273 9.81 6.53C9.94454 6.88792 9.97366 7.27691 9.89391 7.65088C9.81415 8.02485 9.62886 8.36811 9.36 8.64L8.09 9.91C9.51355 12.4135 11.5865 14.4864 14.09 15.91L15.36 14.64C15.6319 14.3711 15.9751 14.1858 16.3491 14.1061C16.7231 14.0263 17.1121 14.0555 17.47 14.19C18.3773 14.5286 19.3199 14.7634 20.28 14.89C20.7658 14.9585 21.2094 15.2032 21.5265 15.5775C21.8437 15.9518 22.0122 16.4296 22 16.92Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div className="method-info">
-                      <span className="method-name">Phone</span>
-                      <span className="method-value">Secondary</span>
-                    </div>
-                  </div>
-                  <div className="method-item">
-                    <div className="method-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V4C20 2.89543 19.1046 2 18 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M22 6L12 13L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div className="method-info">
-                      <span className="method-name">Portal Message</span>
-                      <span className="method-value">Tertiary</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Emergency Information */}
-          <div className="dashboard-section">
-            <h2>Emergency Information</h2>
-            <div className="emergency-info">
-              <div className="emergency-card">
-                <h3>Emergency Contacts</h3>
-                <div className="emergency-contacts">
-                  <div className="contact-item">
-                    <div className="contact-avatar">JD</div>
-                    <div className="contact-details">
-                      <span className="contact-name">Jane Doe</span>
-                      <span className="contact-relation">Mother</span>
-                      <span className="contact-phone">+1 (555) 987-6543</span>
-                    </div>
-                    <span className="contact-priority primary">Primary</span>
-                  </div>
-                  <div className="contact-item">
-                    <div className="contact-avatar">RD</div>
-                    <div className="contact-details">
-                      <span className="contact-name">Robert Doe</span>
-                      <span className="contact-relation">Father</span>
-                      <span className="contact-phone">+1 (555) 987-6544</span>
-                    </div>
-                    <span className="contact-priority secondary">Secondary</span>
-                  </div>
-                </div>
-              </div>
-              <div className="emergency-card">
-                <h3>Medical Information</h3>
-                <div className="medical-info">
-                  <div className="medical-item">
-                    <span className="medical-label">Blood Type</span>
-                    <span className="medical-value">O+</span>
-                  </div>
-                  <div className="medical-item">
-                    <span className="medical-label">Allergies</span>
-                    <span className="medical-value">None Known</span>
-                  </div>
-                  <div className="medical-item">
-                    <span className="medical-label">Medical Conditions</span>
-                    <span className="medical-value">None</span>
-                  </div>
-                  <div className="medical-item">
-                    <span className="medical-label">Insurance Provider</span>
-                    <span className="medical-value">University Health Plan</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 const mockInstructors = [
   {
     id: 1,
@@ -3788,15 +2986,15 @@ function MyInstructorsPage() {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
@@ -3804,28 +3002,28 @@ function MyInstructorsPage() {
             <Link to="/my-instructors" className="nav-item active">
               <span className="nav-text">My Instructors</span>
             </Link>
-            <Link to="/schedule" className="nav-item">
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -4044,44 +3242,44 @@ function SchedulePage() {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
+            </NavLink>
             <Link to="/schedule" className="nav-item active">
               <span className="nav-text">Schedule</span>
             </Link>
-            <Link to="/course-analysis" className="nav-item">
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -4246,44 +3444,44 @@ function CourseAnalysisPage() {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
+            </NavLink>
             <Link to="/course-analysis" className="nav-item active">
               <span className="nav-text">Course Analysis</span>
             </Link>
-            <Link to="/academic-performance" className="nav-item">
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -4435,28 +3633,28 @@ function AcademicPerformancePage() {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
+            </NavLink>
             <Link to="/academic-performance" className="nav-item active">
               <span className="nav-text">Academic Performance</span>
             </Link>
@@ -4464,15 +3662,15 @@ function AcademicPerformancePage() {
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -4695,42 +3893,42 @@ function ResourcesPage() {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
+            </NavLink>
             <Link to="/Studentresources" className="nav-item active">
               <span className="nav-text">Resources</span>
             </Link>
-            <Link to="/weekly-report" className="nav-item">
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
         <div className="sidebar-footer">
@@ -4847,12 +4045,12 @@ function MyStudentsPage() {
             <Link to="/overview" className="nav-item">
               <span className="nav-text">Overview</span>
             </Link>
-            <Link to="/risk-status" className="nav-item">
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
@@ -4860,28 +4058,28 @@ function MyStudentsPage() {
             <Link to="/my-students" className="nav-item active">
               <span className="nav-text">My Students</span>
             </Link>
-            <Link to="/schedule" className="nav-item">
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -5018,44 +4216,44 @@ function StudentDashboard(){
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item active">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -5323,28 +4521,28 @@ function FeedbackPage(){
             <Link to="/overview" className="nav-item">
               <span className="nav-text">Overview</span>
             </Link>
-            <Link to="/risk-status" className="nav-item">
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
@@ -5352,12 +4550,12 @@ function FeedbackPage(){
             <Link to="/feedback" className="nav-item active">
               <span className="nav-text">Feedback</span>
             </Link>
-            <Link to="/Studentresources" className="nav-item">
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
-            <Link to="/weekly-report" className="nav-item">
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
@@ -5633,41 +4831,41 @@ function WeeklyReport(){
         <nav className="sidebar-nav">
           <div className="nav-section">
             <h5>Main</h5>
-            <Link to="/overview" className="nav-item">
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Overview</span>
-            </Link>
-            <Link to="/risk-status" className="nav-item">
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Academic</h5>
-            <Link to="/my-instructors" className="nav-item">
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Instructors</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
-            <Link to="/Studentresources" className="nav-item">
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Resources</span>
-            </Link>
+            </NavLink>
             <Link to="/weekly-report" className="nav-item active">
               <span className="nav-text">Weekly Report</span>
             </Link>
@@ -6537,41 +5735,41 @@ function InstructorDashboard(){
             <Link to="/insoverview" className="nav-item active">
               <span className="nav-text">Overview</span>
             </Link>
-            <Link to="/risk-status" className="nav-item">
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Risk Status</span>
-            </Link>
-            <Link to="/profile" className="nav-item">
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Profile</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Teaching</h5>
-            <Link to="/my-students" className="nav-item">
+            <NavLink to="/my-students" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">My Students</span>
-            </Link>
-            <Link to="/schedule" className="nav-item">
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Schedule</span>
-            </Link>
-            <Link to="/course-analysis" className="nav-item">
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Course Analysis</span>
-            </Link>
-            <Link to="/academic-performance" className="nav-item">
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Academic Performance</span>
-            </Link>
+            </NavLink>
           </div>
           
           <div className="nav-section">
             <h5>Tools</h5>
-            <Link to="/feedback" className="nav-item">
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Feedback</span>
-            </Link>
+            </NavLink>
             <Link to="/resources" className="nav-item">
               <span className="nav-text">Resources</span>
             </Link>
-            <Link to="/weekly-report" className="nav-item">
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-text">Weekly Report</span>
-            </Link>
+            </NavLink>
           </div>
         </nav>
 
