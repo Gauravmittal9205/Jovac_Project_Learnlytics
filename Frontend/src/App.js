@@ -5698,83 +5698,196 @@ function WeeklyReport(){
 function InstructorDashboard(){
   const session = readSession();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [manageOpen, setManageOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [roster, setRoster] = useState([]);
+  const [tas, setTas] = useState([]);
+  const [courseView, setCourseView] = useState(null); // 'view' | 'manage' | 'gradebook' | 'announcements'
+
+  // Instructor-specific mock data (separate from student data)
+  const instructorData = {
+    summary: { totalStudents: 24, activeCourses: 3, avgEngagementPct: 87, atRiskCount: 2 },
+    courses: [
+      { id: 'CS101', code: 'CS-101', section: 'A', term: 'Fall 2025', title: 'Intro to CS', enrolled: 12, limit: 30, avgScore: 81, risk: 'Low', lastActivity: '2d ago', schedule: 'Mon/Wed 10:00-11:30', officeHours: 'Thu 2-4 PM', syllabusUrl: '#' },
+      { id: 'DS201', code: 'DS-201', section: 'B', term: 'Fall 2025', title: 'Data Structures', enrolled: 8, limit: 25, avgScore: 76, risk: 'Medium', lastActivity: '5h ago', schedule: 'Tue/Thu 11:00-12:30', officeHours: 'Fri 1-3 PM', syllabusUrl: '#' },
+      { id: 'AL301', code: 'AL-301', section: 'C', term: 'Fall 2025', title: 'Algorithms', enrolled: 4, limit: 20, avgScore: 69, risk: 'High', lastActivity: '1h ago', schedule: 'Mon 3-5 PM', officeHours: 'Wed 11-12', syllabusUrl: '#' },
+      { id: 'ML401', code: 'ML-401', section: 'D', term: 'Fall 2025', title: 'Machine Learning', enrolled: 22, limit: 35, avgScore: 88, risk: 'Low', lastActivity: '3d ago', schedule: 'Fri 9-11 AM', officeHours: 'Tue 4-5 PM', syllabusUrl: '#' }
+    ],
+    students: [
+      { id: 'S001', name: 'Aarav Singh', course: 'CS101', engagementPct: 92 },
+      { id: 'S002', name: 'Isha Patel', course: 'DS201', engagementPct: 85 },
+      { id: 'S003', name: 'Ravi Kumar', course: 'AL301', engagementPct: 63 }
+    ],
+    analytics: {
+      weeklyEngagement: [72, 75, 78, 80, 82, 86, 87],
+      riskBreakdown: [
+        { label: 'Low', value: 18 },
+        { label: 'Medium', value: 4 },
+        { label: 'High', value: 2 }
+      ]
+    },
+    resources: [
+      { type: 'rubric', name: 'Assignment Rubric Template', link: '#' },
+      { type: 'policy', name: 'Late Submission Policy', link: '#' },
+      { type: 'guide', name: 'Engagement Best Practices', link: '#' }
+    ]
+  };
 
   useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
 
+  const resourceCatalog = {
+    'res-guides': {
+      links: [
+        { label: 'Engagement Best Practices (PDF)', href: '#' },
+        { label: 'Assessment Design Guide (PDF)', href: '#' },
+        { label: 'Accessibility Checklist (DOCX)', href: '#' },
+        { label: 'Effective Feedback Techniques (PDF)', href: '#' },
+      ],
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      images: [
+        'https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=800&q=60',
+        'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=60',
+        'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=800&q=60'
+      ]
+    },
+    'res-templates': {
+      links: [
+        { label: 'Course Syllabus Template (Google Doc)', href: '#' },
+        { label: 'Project Rubric (XLSX)', href: '#' },
+        { label: 'Weekly Plan Template (DOCX)', href: '#' },
+        { label: 'Announcement Templates (DOCX)', href: '#' },
+      ],
+      videoUrl: 'https://www.youtube.com/embed/9bZkp7q19f0',
+      images: [
+        'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=60',
+        'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=60'
+      ]
+    },
+    'res-policies': {
+      links: [
+        { label: 'Late Submission Policy (DOCX)', href: '#' },
+        { label: 'Academic Integrity Statement (PDF)', href: '#' },
+        { label: 'Grading Policy (PDF)', href: '#' },
+      ],
+      videoUrl: 'https://www.youtube.com/embed/ysz5S6PUM-U',
+      images: [
+        'https://images.unsplash.com/photo-1555375771-14b2a63968a2?auto=format&fit=crop&w=800&q=60'
+      ]
+    },
+    'res-tools': {
+      links: [
+        { label: 'Plagiarism Checker', href: '#' },
+        { label: 'LMS Sync Guide', href: '#' },
+        { label: 'Quiz Randomizer Tool', href: '#' },
+        { label: 'Video Captioning Helper', href: '#' },
+      ],
+      videoUrl: 'https://www.youtube.com/embed/aqz-KE-bpKQ',
+      images: [
+        'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=800&q=60',
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=60'
+      ]
+    },
+  };
+
+  const openManage = (course) => {
+    setSelectedCourse(course);
+    // Mock roster/TAs per course for now
+    setRoster([
+      { id: 'S001', name: 'Aarav Singh', email: 'aarav@example.com' },
+      { id: 'S002', name: 'Isha Patel', email: 'isha@example.com' }
+    ]);
+    setTas([{ id: 'T001', name: 'TA Neha', email: 'neha@example.com' }]);
+    setManageOpen(true);
+    setCourseView('manage');
+  };
+
+  const exportRosterCsv = () => {
+    const header = 'id,name,email';
+    const rows = roster.map(r => `${r.id},${r.name},${r.email}`);
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${selectedCourse?.id || 'course'}-roster.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const importRosterCsv = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = String(e.target?.result || '');
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      const dataLines = lines.slice(1); // drop header
+      const parsed = dataLines.map((l, idx) => {
+        const [id, name, email] = l.split(',');
+        return { id: id || `S${100+idx}`, name: name || '', email: email || '' };
+      });
+      setRoster(parsed);
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
+      {/* Sidebar (profile card only) */}
       <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <div className="logo-shield">L</div>
             <span className="brand-text">Learnlytics</span>
           </div>
-          <button 
+          <button
             className="sidebar-toggle"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? '←' : '→'}
           </button>
         </div>
-        
+
         <div className="sidebar-profile">
-          <div className="profile-avatar">
-            {(session?.name || 'Instructor').split(' ').map(n => n[0]).join('').toUpperCase()}
-          </div>
-          <div className="profile-info">
-            <h4>{session?.name || 'Instructor'}</h4>
-            <p>Instructor</p>
+          <div className="instructor-profile-card">
+            <div className="profile-top">
+              {session?.photoUrl ? (
+                <img className="profile-photo-img" src={session.photoUrl} alt="Instructor" />
+              ) : (
+                <div className="profile-avatar">
+                  {(session?.name || 'Instructor').split(' ').map(n => n[0]).join('').toUpperCase()}
+                </div>
+              )}
+              <div className="profile-info">
+                <h4>{session?.name || 'Instructor'}</h4>
+                <p>Instructor</p>
+              </div>
+            </div>
+            <p className="profile-bio">Empowering learners with engaging coursework and data-driven guidance.</p>
+            <div className="profile-meta">
+              <div>Department: Computer Science</div>
+              <div>Email: instructor@example.com</div>
+            </div>
+            <div className="profile-tags">
+              <span className="tag">Teaching</span>
+              <span className="tag">Analytics</span>
+              <span className="tag">Mentorship</span>
+            </div>
+            <div className="profile-stats">
+              <div className="stat-chip">24 Students</div>
+              <div className="stat-chip">3 Courses</div>
+            </div>
+            <div className="profile-actions">
+              <button className="btn small" onClick={() => navigate('/profile')}>View Profile</button>
+              <button className="btn small ghost" onClick={() => navigate('/resources')}>Resources</button>
+            </div>
           </div>
         </div>
 
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <h5>Main</h5>
-            <Link to="/insoverview" className="nav-item active">
-              <span className="nav-text">Overview</span>
-            </Link>
-            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Risk Status</span>
-            </NavLink>
-            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Profile</span>
-            </NavLink>
-          </div>
-          
-          <div className="nav-section">
-            <h5>Teaching</h5>
-            <NavLink to="/my-students" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">My Students</span>
-            </NavLink>
-            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Schedule</span>
-            </NavLink>
-            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Course Analysis</span>
-            </NavLink>
-            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Academic Performance</span>
-            </NavLink>
-          </div>
-          
-          <div className="nav-section">
-            <h5>Tools</h5>
-            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Feedback</span>
-            </NavLink>
-            <Link to="/resources" className="nav-item">
-              <span className="nav-text">Resources</span>
-            </Link>
-            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Weekly Report</span>
-            </NavLink>
-          </div>
-        </nav>
-
         <div className="sidebar-footer">
-          <button 
+          <button
             className="logout-btn"
             onClick={() => {
               clearSession();
@@ -5790,7 +5903,7 @@ function InstructorDashboard(){
       <div className={`dashboard-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="dashboard-header">
           <div className="header-left">
-            <button 
+            <button
               className="mobile-sidebar-toggle"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
@@ -5800,59 +5913,362 @@ function InstructorDashboard(){
                 <span></span>
               </span>
             </button>
-            <h1>Instructor Dashboard</h1>
+            <h1>{activeTab === 'overview' ? 'Overview' : activeTab === 'courses' ? 'My Courses' : activeTab === 'students' ? 'Students' : activeTab === 'analytics' ? 'Analytics' : 'Resources'}</h1>
           </div>
           <div className="header-right">
+            <button className="btn ghost" onClick={() => navigate('/')}>Back</button>
             <div className="header-stats">
               <span className="stat-item">
-                <span className="stat-value">24</span>
+                <span className="stat-value">{instructorData.summary.totalStudents}</span>
                 <span className="stat-label">Students</span>
               </span>
               <span className="stat-item">
-                <span className="stat-value">3</span>
+                <span className="stat-value">{instructorData.summary.activeCourses}</span>
                 <span className="stat-label">Courses</span>
               </span>
             </div>
           </div>
         </div>
 
-        <div className="dashboard-container">
-          <div className="dashboard-section">
-            <h2>Welcome, {session?.name || 'Instructor'}!</h2>
-            <p>You are logged in as an instructor. This is your dashboard where you can manage your courses, students, and view analytics.</p>
-            
-            <div className="quick-stats">
-              <div className="stat-card">
-                <div className="stat-icon students"></div>
-                <div className="stat-content">
-                  <div className="stat-value">24</div>
-                  <div className="stat-label">Total Students</div>
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div className="dashboard-container">
+            <div className="dashboard-section">
+              <h2>Welcome, {session?.name || 'Instructor'}!</h2>
+              <p>Manage your courses, track student progress, and view key analytics.</p>
+
+              <div className="quick-stats">
+                <div className="stat-card">
+                  <div className="stat-icon students"></div>
+                  <div className="stat-content">
+                    <div className="stat-value">{instructorData.summary.totalStudents}</div>
+                    <div className="stat-label">Total Students</div>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon courses"></div>
+                  <div className="stat-content">
+                    <div className="stat-value">{instructorData.summary.activeCourses}</div>
+                    <div className="stat-label">Active Courses</div>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon engagement"></div>
+                  <div className="stat-content">
+                    <div className="stat-value">{instructorData.summary.avgEngagementPct}%</div>
+                    <div className="stat-label">Avg Engagement</div>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon risk"></div>
+                  <div className="stat-content">
+                    <div className="stat-value">{instructorData.summary.atRiskCount}</div>
+                    <div className="stat-label">At Risk</div>
+                  </div>
                 </div>
               </div>
-              <div className="stat-card">
-                <div className="stat-icon courses"></div>
-                <div className="stat-content">
-                  <div className="stat-value">3</div>
-                  <div className="stat-label">Active Courses</div>
+              <div className="cards-grid">
+                <div className="card">
+                  <h4>Quick Actions</h4>
+                  <div className="pill-row">
+                    <button className="btn small">Create Assignment</button>
+                    <button className="btn small">Post Announcement</button>
+                    <button className="btn small">Schedule Session</button>
+                  </div>
                 </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon engagement"></div>
-                <div className="stat-content">
-                  <div className="stat-value">87%</div>
-                  <div className="stat-label">Avg Engagement</div>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon risk"></div>
-                <div className="stat-content">
-                  <div className="stat-value">2</div>
-                  <div className="stat-label">At Risk</div>
+                <div className="card">
+                  <h4>Upcoming Items</h4>
+                  <ul className="list plain">
+                    <li>Assignment 2 due Friday (CS101)</li>
+                    <li>Quiz: Trees & Graphs next Tuesday (DS201)</li>
+                    <li>Office Hours: Thursday 3PM</li>
+                  </ul>
                 </div>
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'courses' && (
+          <div className="dashboard-container">
+            <div className="dashboard-section courses-bg">
+              <div className="courses-bg-img" style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/classroom.webp'})` }}></div>
+              <h2>My Courses</h2>
+              <div className="courses-grid">
+                {instructorData.courses.map(course => (
+                  <div key={course.id} className="course-card">
+                    <div className="course-card-header">
+                      <div>
+                        <h4 className="course-title">{course.title}</h4>
+                        <div className="course-sub">{course.code} • Sec {course.section} • {course.term}</div>
+                      </div>
+                      <span className={`risk-chip ${String(course.risk).toLowerCase()}`}>{course.risk} Risk</span>
+                      </div>
+                    <div className="course-metrics">
+                      <div className="metric"><span className="metric-label">Enrolled</span><span className="metric-value">{course.enrolled}/{course.limit}</span></div>
+                      <div className="metric"><span className="metric-label">Avg Score</span><span className="metric-value">{course.avgScore}%</span></div>
+                      <div className="metric"><span className="metric-label">Last Activity</span><span className="metric-value">{course.lastActivity}</span></div>
+                    </div>
+                    <div className="course-extra">
+                      <div className="extra-item"><span className="extra-label">Schedule</span><span className="extra-value">{course.schedule}</span></div>
+                      <div className="extra-item"><span className="extra-label">Office Hours</span><span className="extra-value">{course.officeHours}</span></div>
+                      <div className="extra-item"><span className="extra-label">Syllabus</span><a className="extra-link" href={course.syllabusUrl}>Open</a></div>
+                    </div>
+                    <div className="course-actions">
+                      <button className="btn small" onClick={() => { setSelectedCourse(course); setCourseView('view'); }}>View</button>
+                      <button className="btn small" onClick={() => openManage(course)}>Manage</button>
+                      <button className="btn small ghost" onClick={() => { setSelectedCourse(course); setCourseView('gradebook'); }}>Gradebook</button>
+                      <button className="btn small ghost" onClick={() => { setSelectedCourse(course); setCourseView('announcements'); }}>Announcements</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'students' && (
+          <div className="dashboard-container">
+            <div className="dashboard-section">
+              <h2>Students</h2>
+              <div className="list">
+                {instructorData.students.map(s => (
+                  <div key={s.id} className="list-item">
+                    <div className="list-item-main">
+                      <strong>{s.name}</strong>
+                      <span className="muted">{s.course}</span>
+                    </div>
+                    <div className="list-item-meta">
+                      <span>Engagement {s.engagementPct}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="dashboard-container">
+            <div className="dashboard-section">
+              <h2>Analytics</h2>
+              <div className="analytics-grid">
+                <div className="analytics-card">
+                  <h4>Weekly Engagement</h4>
+                  <div className="trend-chart-mini">
+                    {instructorData.analytics.weeklyEngagement.map((score, index) => (
+                      <div key={index} className="trend-point" style={{
+                        left: `${(index / (instructorData.analytics.weeklyEngagement.length - 1)) * 100}%`,
+                        bottom: `${score}%`
+                      }}>
+                        <div className="trend-dot"></div>
+                        <div className="trend-value">{score}%</div>
+                      </div>
+                    ))}
+                    <div className="trend-line"></div>
+                  </div>
+                </div>
+                <div className="analytics-card">
+                  <h4>Risk Breakdown</h4>
+                  <div className="pill-row">
+                    {instructorData.analytics.riskBreakdown.map((r, idx) => (
+                      <span key={idx} className="pill">{r.label}: {r.value}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'resources' && (
+          <div className="dashboard-container">
+            <div className="dashboard-section">
+              <h2>Resources</h2>
+              <div className="resource-tiles">
+                {[
+                  { key: 'guides', title: 'Guides', color: '#f59e0b', desc: 'Best practices and how-tos', icon: '📘', count: 8, highlights: ['Engagement tips', 'Assessment design'] },
+                  { key: 'templates', title: 'Templates', color: '#ef4444', desc: 'Rubrics, syllabi, checklists', icon: '🧩', count: 12, highlights: ['Project rubric', 'Syllabus v2.1'] },
+                  { key: 'policies', title: 'Policies', color: '#8b5cf6', desc: 'Classroom and grading policies', icon: '⚖️', count: 5, highlights: ['Late work policy', 'Academic integrity'] },
+                  { key: 'tools', title: 'Tools', color: '#f97316', desc: 'Integrations and utilities', icon: '🛠️', count: 6, highlights: ['Plagiarism checker', 'LMS sync'] }
+                ].map((tile, idx) => (
+                  <button key={tile.key} className="resource-tile" style={{ ['--tile-color']: tile.color }} onClick={() => setCourseView(`res-${tile.key}`)}>
+                    <div className="tile-icon" aria-hidden="true">{tile.icon}</div>
+                    <div className="tile-body">
+                      <div className="tile-title">{tile.title}</div>
+                      <div className="tile-desc">{tile.desc}</div>
+                      <ul className="tile-highlights">
+                        {tile.highlights.map((h, i) => (
+                          <li key={i}>{h}</li>
+                        ))}
+                      </ul>
+                      <div>
+                        <button type="button" className="btn small light" onClick={(e) => { e.stopPropagation(); setCourseView(`res-${tile.key}`); }}>Open</button>
+                    </div>
+                    </div>
+                    <div className="tile-aside">
+                      <span className="tile-count">{tile.count}</span>
+                      <div className="tile-num" aria-hidden="true">{idx+1}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Bottom expanded navbar */}
+        <div className="bottom-nav">
+          <button className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
+          <button className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => setActiveTab('courses')}>Courses</button>
+          <button className={`tab-btn ${activeTab === 'students' ? 'active' : ''}`} onClick={() => setActiveTab('students')}>Students</button>
+          <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>Analytics</button>
+          <button className={`tab-btn ${activeTab === 'resources' ? 'active' : ''}`} onClick={() => setActiveTab('resources')}>Resources</button>
+          <NavLink to="/my-students" className={({ isActive }) => `tab-btn ${isActive ? 'active' : ''}`}>My Students</NavLink>
         </div>
+        {/* On-screen detail panel (View/Manage/Gradebook/Announcements) */}
+        {(courseView && (selectedCourse || String(courseView).startsWith('res-'))) && (
+          <div className="course-detail-panel">
+            <div className="panel-header">
+              {String(courseView).startsWith('res-') ? (
+                <>
+                  <div>
+                    <h3 className="panel-title">Resources</h3>
+                    <div className="panel-sub">{courseView==='res-guides' ? 'Guides' : courseView==='res-templates' ? 'Templates' : courseView==='res-policies' ? 'Policies' : 'Tools'}</div>
+                  </div>
+                  <div className="panel-tabs">
+                    <button className="btn ghost" onClick={()=>{ setCourseView(null); setManageOpen(false); }}>Close</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <h3 className="panel-title">{selectedCourse.title}</h3>
+                    <div className="panel-sub">{selectedCourse.code} • Sec {selectedCourse.section} • {selectedCourse.term}</div>
+                  </div>
+                  <div className="panel-tabs">
+                    <button className={`tab-btn ${courseView==='view'?'active':''}`} onClick={()=>setCourseView('view')}>View</button>
+                    <button className={`tab-btn ${courseView==='manage'?'active':''}`} onClick={()=>{ if(!manageOpen) openManage(selectedCourse); else setCourseView('manage'); }}>Manage</button>
+                    <button className={`tab-btn ${courseView==='gradebook'?'active':''}`} onClick={()=>setCourseView('gradebook')}>Gradebook</button>
+                    <button className={`tab-btn ${courseView==='announcements'?'active':''}`} onClick={()=>setCourseView('announcements')}>Announcements</button>
+                    <button className="btn ghost" onClick={()=>{ setCourseView(null); setManageOpen(false); }}>Close</button>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="panel-body">
+              {courseView==='view' && (
+                <div className="panel-grid">
+                  <div className="panel-card">
+                    <h4>Overview</h4>
+                    <p>Enrolled: {selectedCourse.enrolled}/{selectedCourse.limit}</p>
+                    <p>Average Score: {selectedCourse.avgScore}%</p>
+                    <p>Last Activity: {selectedCourse.lastActivity}</p>
+                  </div>
+                  <div className="panel-card">
+                    <h4>Upcoming</h4>
+                    <ul className="list plain">
+                      <li>Assignment 2 due Friday</li>
+                      <li>Quiz next Tuesday</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+              {courseView==='manage' && (
+                <div className="manage-grid">
+                  <div className="manage-section">
+                    <h4>Roster</h4>
+                    <div className="roster-list">
+                      {roster.map(s => (
+                        <div key={s.id} className="roster-row">
+                          <div>
+                            <strong>{s.name}</strong>
+                            <div className="muted">{s.email}</div>
+                          </div>
+                          <button className="btn small ghost" onClick={() => setRoster(prev => prev.filter(r => r.id !== s.id))}>Remove</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="roster-actions">
+                      <button className="btn small" onClick={exportRosterCsv}>Export CSV</button>
+                      <label className="btn small ghost">
+                        Import CSV
+                        <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => e.target.files && e.target.files[0] && importRosterCsv(e.target.files[0])} />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="manage-section">
+                    <h4>Invite</h4>
+                    <div className="invite-box">
+                      <div>Join Code: <strong>{selectedCourse.id}-JOIN</strong></div>
+                      <div>Invite Link:</div>
+                      <div className="invite-link">https://app.learnlytics.example/join/{selectedCourse.id}</div>
+                      <div className="invite-actions">
+                        <button className="btn small" onClick={() => navigator.clipboard.writeText(`${selectedCourse.id}-JOIN`)}>Copy Code</button>
+                        <button className="btn small ghost" onClick={() => navigator.clipboard.writeText(`https://app.learnlytics.example/join/${selectedCourse.id}`)}>Copy Link</button>
+                      </div>
+                    </div>
+                    <h4>Teaching Assistants</h4>
+                    <div className="roster-list">
+                      {tas.map(t => (
+                        <div key={t.id} className="roster-row">
+                          <div>
+                            <strong>{t.name}</strong>
+                            <div className="muted">{t.email}</div>
+                          </div>
+                          <button className="btn small ghost" onClick={() => setTas(prev => prev.filter(x => x.id !== t.id))}>Remove</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="roster-actions">
+                      <button className="btn small" onClick={() => setTas(prev => [...prev, { id: `T${100+prev.length}`, name: 'New TA', email: 'ta@example.com' }])}>Add TA</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {courseView==='gradebook' && (
+                <div className="panel-card">
+                  <h4>Gradebook (placeholder)</h4>
+                  <p>Display grade distribution and per-student grades here.</p>
+                </div>
+              )}
+              {courseView==='announcements' && (
+                <div className="panel-card">
+                  <h4>Announcements (placeholder)</h4>
+                  <p>Create and manage course announcements.</p>
+                </div>
+              )}
+              {String(courseView).startsWith('res-') && (
+                <div className="panel-grid">
+                  <div className="panel-card">
+                    <h4>{courseView==='res-guides' ? 'Guides' : courseView==='res-templates' ? 'Templates' : courseView==='res-policies' ? 'Policies' : 'Tools'} — Featured Video</h4>
+                    <div className="video-wrapper">
+                      <iframe
+                        src={(resourceCatalog[courseView]?.videoUrl) || ''}
+                        title="Resource Video"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                  <div className="panel-card">
+                    <h4>Resources</h4>
+                    <ul className="resource-links">
+                      {(resourceCatalog[courseView]?.links || []).map((item, i) => (
+                        <li key={i}><a className="resource-link" href={item.href} target="_blank" rel="noreferrer">{item.label}</a></li>
+                      ))}
+                    </ul>
+                    <div className="gallery">
+                      {(resourceCatalog[courseView]?.images || []).map((src, i) => (
+                        <img key={i} className="gallery-img" src={src} alt="Resource visual" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
