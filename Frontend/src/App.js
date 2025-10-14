@@ -291,6 +291,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/contact" element={<Contact />} />
           
           {/* Auth Routes */}
           <Route path="/login" element={

@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
       try {
         console.log('Making auth check request to server...');
-        const response = await axios.get('http://localhost:5001/api/auth/me', {
+        const response = await axios.get('http://localhost:5000/api/auth/me', {
           headers: { 
             'x-auth-token': token,
             'Content-Type': 'application/json'
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setError('');
       console.log('Starting login for:', email);
-      const response = await axios.post('http://localhost:5001/api/auth/login', {
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
         email,
         password
       }, {

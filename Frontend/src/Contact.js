@@ -353,7 +353,7 @@ const ContactSuccess = () => (
 );
 
 // ================= Main App =================
-const App = () => {
+const Contact = () => {
   const [sent, setSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -403,4 +403,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Contact;
