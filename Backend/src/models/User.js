@@ -42,8 +42,6 @@ const userSchema = new mongoose.Schema({
         },
         academic: {
             program: String,
-            major: String,
-            minor: String,
             year: String,
             semester: String,
             expectedGraduation: String,

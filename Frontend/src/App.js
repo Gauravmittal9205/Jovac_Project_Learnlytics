@@ -2334,29 +2334,77 @@ function OverviewPage() {
             </div>
           </div>
 
-          {/* Recommendations Section */}
-          <div className="dashboard-section">
-            <h2 className="section-title">Suggested for You</h2>
-            <div className="recommendations-grid">
-              {studentData.recommendations.map((rec, index) => (
-                <div key={index} className="recommendation-card">
-                  <div className={`rec-icon ${rec.type}`}></div>
-                  <div className="rec-content">
-                    <h4>{rec.title}</h4>
-                    <p>{rec.reason}</p>
-                    <button
-  className="btn primary small"
-  onClick={() =>
-    navigate(`/recommendation/${rec.title.replace(/\s+/g, "-").toLowerCase()}`)
-  }
->
-  Start Now
-</button>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Enhanced Recommendations Section */}
+<div className="dashboard-section">
+  <div className="section-header">
+    <h2 className="section-title">Suggested for You</h2>
+    <p className="section-subtitle">Personalized recommendations based on your learning goals</p>
+  </div>
+  
+  <div className="recommendations-grid">
+    {studentData.recommendations.map((rec, index) => (
+      <div key={index} className="recommendation-card enhanced">
+        <div className="card-header">
+          <div className={`rec-icon ${rec.type}`}>
+            {rec.type === 'course' && '📚'}
+            {rec.type === 'quiz' && '🧠'}
+            {rec.type === 'tutorial' && '💡'}
+            {rec.type === 'practice' && '🎯'}
           </div>
+          <div className="rec-type-badge">
+            {rec.type}
+          </div>
+        </div>
+        
+        <div className="card-content">
+          <h4 className="rec-title">{rec.title}</h4>
+          <p className="rec-description">{rec.reason}</p>
+          
+          {rec.difficulty && (
+            <div className="rec-meta">
+              <span className={`difficulty-badge ${rec.difficulty.toLowerCase()}`}>
+                {rec.difficulty}
+              </span>
+              {rec.duration && (
+                <span className="duration-info">⏱️ {rec.duration}</span>
+              )}
+            </div>
+          )}
+          
+          {rec.progress !== undefined && (
+            <div className="progress-container">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{width: `${rec.progress}%`}}
+                ></div>
+              </div>
+              <span className="progress-text">{rec.progress}% complete</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="card-actions">
+  <button
+    className="btn-recommendation-primary"
+    onClick={() => {
+              if (rec.type === 'course' || rec.type === 'tutorial') {
+                navigate(`/learn/${rec.title.replace(/\s+/g, "-").toLowerCase()}`);
+              } else if (rec.type === 'quiz') {
+                navigate(`/quiz/${rec.title.replace(/\s+/g, "-").toLowerCase()}`);
+              } else {
+                navigate(`/recommendation/${rec.title.replace(/\s+/g, "-").toLowerCase()}`);
+              }
+            }}
+          >
+            Start Now
+            </button>
+
+</div>
+      </div>
+    ))}
+  </div>
+</div>
         </div>
       </div>
     </div>
@@ -2704,98 +2752,390 @@ function ProfilePage(){
   );
 }
 
-const recommendationContent = {
-  "advanced-algorithms": {
-    title: "Advanced Algorithms",
-    description: "Dive deeper into algorithm design patterns and problem-solving strategies.",
-    cardData: [
-      { count: "25", label: "Lessons", color: "#E0F2FE" },
-      { count: "12", label: "Videos", color: "#EBFBEE" },
-      { count: "30", label: "Quizzes", color: "#FEF7E6" },
-      { count: "8", label: "Challenges", color: "#FDEFEF" },
-    ],
-    listData: [
-      { title: "Binary Search Mastery", description: "Lesson on core concepts, iterative, and recursive implementations." },
-      { title: "Dynamic Programming 101", description: "Video series on breaking down complex problems with memoization." },
-      { title: "Graph Traversal Quiz", description: "Test your knowledge on DFS and BFS with multiple-choice questions." },
-    ]
-  },
-  "database-design": {
-    title: "Database Design",
-    description: "Learn ER diagrams, normalization, and indexing for efficient DBMS design.",
-    cardData: [
-      { count: "15", label: "ER Diagrams", color: "#F0F0FF" },
-      { count: "20", label: "Normalization", color: "#E9F5FF" },
-      { count: "10", label: "Indexing", color: "#FFF0E5" },
-      { count: "5", label: "Case Studies", color: "#E6F6E6" },
-    ],
-    listData: [
-      { title: "Relational Schema Design", description: "Practice problems for building efficient and scalable databases." },
-      { title: "SQL Query Optimization", description: "Video guide on writing performant queries and using indexes." },
-      { title: "NoSQL vs SQL Quiz", description: "A quick quiz to test your understanding of different database types." },
-    ]
-  },
-  "math-problem-sets": {
-    title: "Math Problem Sets",
-    description: "Practice challenging problems to maintain your mathematical edge.",
-    cardData: [
-      { count: "50+", label: "Algebra", color: "#E0F2FE" },
-      { count: "30+", label: "Geometry", color: "#EBFBEE" },
-      { count: "40+", label: "Calculus", color: "#FEF7E6" },
-      { count: "20+", label: "Probability", color: "#FDEFEF" },
-    ],
-    listData: [
-      { title: "Advanced Algebra Problems", description: "A set of challenging equations and inequalities with step-by-step solutions." },
-      { title: "Trigonometry Masterclass", description: "Video lessons on identities and applications in various fields." },
-      { title: "Logic & Puzzles Quiz", description: "Brain teasers and logic puzzles to sharpen your critical thinking." },
-    ]
-  },
-};
+
 
 
 function RecommendationPage() {
   const { topic } = useParams();
-  const data = recommendationContent[topic];
-  useEffect(() => {
-    // Scrolls to the top of the page smoothly
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [topic]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes timer
+  const [answers, setAnswers] = useState([]);
 
-  if (!data) {
+  // Quiz questions based on topic
+  const quizData = {
+    "advanced-algorithms": {
+      title: "Advanced Algorithms Quiz",
+      description: "Test your knowledge of algorithm design patterns and problem-solving strategies.",
+      questions: [
+        {
+          question: "Which algorithm is best suited for finding the shortest path in a graph with non-negative edge weights?",
+          options: [
+            "Dijkstra's Algorithm",
+            "Bellman-Ford Algorithm", 
+            "Floyd-Warshall Algorithm",
+            "Kruskal's Algorithm"
+          ],
+          correct: 0
+        },
+        {
+          question: "What is the time complexity of the QuickSort algorithm in the worst case?",
+          options: [
+            "O(n log n)",
+            "O(n²)",
+            "O(log n)",
+            "O(n)"
+          ],
+          correct: 1
+        },
+        {
+          question: "Which data structure is most efficient for implementing a priority queue?",
+          options: [
+            "Array",
+            "Linked List",
+            "Binary Heap",
+            "Stack"
+          ],
+          correct: 2
+        },
+        {
+          question: "What technique is used in Dynamic Programming to avoid redundant calculations?",
+          options: [
+            "Greedy Approach",
+            "Memoization",
+            "Backtracking",
+            "Divide and Conquer"
+          ],
+          correct: 1
+        },
+        {
+          question: "Which sorting algorithm is stable and has O(n log n) worst-case time complexity?",
+          options: [
+            "QuickSort",
+            "MergeSort",
+            "HeapSort",
+            "BubbleSort"
+          ],
+          correct: 1
+        }
+      ]
+    },
+    "database-design": {
+      title: "Database Design Quiz",
+      description: "Test your understanding of database concepts, normalization, and design principles.",
+      questions: [
+        {
+          question: "What is the first normal form (1NF) in database design?",
+          options: [
+            "Eliminating duplicate columns",
+            "Eliminating duplicate rows",
+            "Each cell contains only atomic values",
+            "Creating separate tables for related data"
+          ],
+          correct: 2
+        },
+        {
+          question: "Which type of join returns all records from the left table and matching records from the right table?",
+          options: [
+            "INNER JOIN",
+            "LEFT JOIN",
+            "RIGHT JOIN",
+            "FULL OUTER JOIN"
+          ],
+          correct: 1
+        },
+        {
+          question: "What is the purpose of an index in a database?",
+          options: [
+            "To store data",
+            "To improve query performance",
+            "To enforce constraints",
+            "To define relationships"
+          ],
+          correct: 1
+        },
+        {
+          question: "Which normal form deals with transitive dependencies?",
+          options: [
+            "First Normal Form (1NF)",
+            "Second Normal Form (2NF)",
+            "Third Normal Form (3NF)",
+            "Boyce-Codd Normal Form (BCNF)"
+          ],
+          correct: 2
+        },
+        {
+          question: "What does ACID stand for in database transactions?",
+          options: [
+            "Atomicity, Consistency, Isolation, Durability",
+            "Access, Control, Identity, Data",
+            "Automatic, Consistent, Independent, Direct",
+            "Analysis, Consistency, Integrity, Durability"
+          ],
+          correct: 0
+        }
+      ]
+    },
+    "math-problem-sets": {
+      title: "Mathematics Quiz",
+      description: "Test your mathematical reasoning and problem-solving skills.",
+      questions: [
+        {
+          question: "What is the derivative of sin(x) with respect to x?",
+          options: [
+            "cos(x)",
+            "-cos(x)",
+            "sin(x)",
+            "-sin(x)"
+          ],
+          correct: 0
+        },
+        {
+          question: "What is the sum of the first n natural numbers?",
+          options: [
+            "n(n+1)/2",
+            "n(n-1)/2",
+            "n²/2",
+            "n(n+1)"
+          ],
+          correct: 0
+        },
+        {
+          question: "In a right triangle with legs a and b, and hypotenuse c, what is the relationship?",
+          options: [
+            "a + b = c",
+            "a² + b² = c²",
+            "a × b = c",
+            "a/b = c"
+          ],
+          correct: 1
+        },
+        {
+          question: "What is the value of log₂(8)?",
+          options: [
+            "2",
+            "3",
+            "4",
+            "8"
+          ],
+          correct: 1
+        },
+        {
+          question: "What is the probability of rolling a 6 on a fair six-sided die?",
+          options: [
+            "1/2",
+            "1/3",
+            "1/6",
+            "1/4"
+          ],
+          correct: 2
+        }
+      ]
+    }
+  };
+
+  const currentQuiz = quizData[topic] || {
+    title: "Quiz Not Found",
+    description: "The selected quiz is not available.",
+    questions: []
+  };
+
+  // Timer effect
+  useEffect(() => {
+    if (timeLeft > 0 && !showResult) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && !showResult) {
+      handleSubmitQuiz();
+    }
+  }, [timeLeft, showResult]);
+
+  const handleAnswerSelect = (answerIndex) => {
+    setSelectedAnswer(answerIndex);
+  };
+
+  const handleNextQuestion = () => {
+    if (selectedAnswer !== null) {
+      const newAnswers = [...answers];
+      newAnswers[currentQuestion] = selectedAnswer;
+      setAnswers(newAnswers);
+      
+      if (selectedAnswer === currentQuiz.questions[currentQuestion].correct) {
+        setScore(score + 1);
+      }
+    }
+
+    if (currentQuestion < currentQuiz.questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(answers[currentQuestion + 1] !== undefined ? answers[currentQuestion + 1] : null);
+    } else {
+      handleSubmitQuiz();
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+      setSelectedAnswer(answers[currentQuestion - 1] !== undefined ? answers[currentQuestion - 1] : null);
+    }
+  };
+
+  const handleSubmitQuiz = () => {
+    let finalScore = score;
+    if (selectedAnswer !== null && selectedAnswer === currentQuiz.questions[currentQuestion].correct) {
+      finalScore += 1;
+    }
+    
+    // Calculate final score
+    const finalAnswers = [...answers];
+    if (selectedAnswer !== null) {
+      finalAnswers[currentQuestion] = selectedAnswer;
+    }
+    
+    finalScore = finalAnswers.reduce((acc, answer, index) => {
+      if (answer === currentQuiz.questions[index].correct) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+    
+    setScore(finalScore);
+    setShowResult(true);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  if (currentQuiz.questions.length === 0) {
     return (
-      <div className="p-6 max-w-3xl mx-auto text-center">
-        <h1 className="text-3xl font-bold mb-4">Not Found</h1>
-        <p className="text-gray-600 mb-6">The selected recommendation does not exist. Please go back.</p>
+      <div className="quiz-container not-found">
+        <div className="quiz-header">
+          <h1>Quiz Not Available</h1>
+          <p>The selected quiz topic is not available. Please choose a different topic.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showResult) {
+    const percentage = Math.round((score / currentQuiz.questions.length) * 100);
+    return (
+      <div className="quiz-container result-page">
+        <div className="result-content">
+          <div className="result-icon">
+            {percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}
+          </div>
+          <h1 className="result-title">Quiz Completed!</h1>
+          <div className="result-score">
+            <div className="score-circle">
+              <span className="score-number">{percentage}%</span>
+            </div>
+            <p className="score-text">
+              You scored {score} out of {currentQuiz.questions.length} questions
+            </p>
+          </div>
+          <div className="result-feedback">
+            {percentage >= 90 && <p className="excellent">Excellent! You have mastered this topic!</p>}
+            {percentage >= 80 && percentage < 90 && <p className="good">Great job! You have a solid understanding.</p>}
+            {percentage >= 60 && percentage < 80 && <p className="average">Good effort! Review the topics to improve further.</p>}
+            {percentage < 60 && <p className="needs-improvement">Keep practicing! Consider reviewing the material again.</p>}
+          </div>
+          <div className="result-actions">
+            <button className="btn-retry" onClick={() => window.location.reload()}>
+              Retake Quiz
+            </button>
+            <button className="btn-home" onClick={() => window.history.back()}>
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="recommendation-page p-6 max-w-5xl mx-auto">
-      <div className="header-section">
-        <h1 className="text-4xl font-extrabold text-gray-800">{data.title}</h1>
-        <p className="text-lg text-gray-600 mt-2">{data.description}</p>
-      </div>
-      
-      <div className="card-section mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-        {data.cardData.map((card, index) => (
-          <div key={index} className="card-item bg-white p-6 rounded-2xl shadow-md flex flex-col items-start" style={{ backgroundColor: card.color }}>
-            <span className="text-4xl font-bold text-gray-800 mb-1">{card.count}</span>
-            <span className="text-gray-600 text-sm font-semibold">{card.label}</span>
+    <div className="quiz-container">
+      <div className="quiz-header">
+        <div className="quiz-info">
+          <h1>{currentQuiz.title}</h1>
+          <p>{currentQuiz.description}</p>
+        </div>
+        <div className="quiz-progress">
+          <div className="timer">⏱️ {formatTime(timeLeft)}</div>
+          <div className="question-counter">
+            Question {currentQuestion + 1} of {currentQuiz.questions.length}
           </div>
-        ))}
+          <div className="progress-bar-quiz">
+            <div 
+              className="progress-fill-quiz" 
+              style={{width: `${((currentQuestion + 1) / currentQuiz.questions.length) * 100}%`}}
+            ></div>
+          </div>
+        </div>
       </div>
 
-      <div className="content-section mt-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Learning Resources</h2>
-        <div className="list-container">
-          {data.listData.map((item, index) => (
-            <div key={index} className="resource-item bg-white p-6 rounded-xl shadow-sm mb-4">
-              <h3 className="text-xl font-semibold text-gray-700">{item.title}</h3>
-              <p className="text-gray-500 mt-2">{item.description}</p>
-              <button className="mt-4 px-6 py-2 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition-colors">Start Now</button>
-            </div>
-          ))}
+      <div className="quiz-content">
+        <div className="question-section">
+          <h2 className="question-text">
+            {currentQuiz.questions[currentQuestion].question}
+          </h2>
+          
+          <div className="options-container">
+            {currentQuiz.questions[currentQuestion].options.map((option, index) => (
+              <div
+                key={index}
+                className={`option ${selectedAnswer === index ? 'selected' : ''} ${answers[currentQuestion] === index ? 'answered' : ''}`}
+                onClick={() => handleAnswerSelect(index)}
+              >
+                <div className="option-indicator">
+                  {String.fromCharCode(65 + index)}
+                </div>
+                <div className="option-text">
+                  {option}
+                </div>
+                {answers[currentQuestion] === index && (
+                  <div className="check-icon">✓</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="quiz-navigation">
+          <button 
+            className="nav-btn prev"
+            onClick={handlePrevQuestion}
+            disabled={currentQuestion === 0}
+          >
+            ← Previous
+          </button>
+          
+          <div className="question-status">
+            {currentQuestion + 1} / {currentQuiz.questions.length}
+          </div>
+          
+          {currentQuestion === currentQuiz.questions.length - 1 ? (
+            <button 
+              className="nav-btn submit"
+              onClick={handleSubmitQuiz}
+              disabled={selectedAnswer === null}
+            >
+              Submit Quiz
+            </button>
+          ) : (
+            <button 
+              className="nav-btn next"
+              onClick={handleNextQuestion}
+              disabled={selectedAnswer === null}
+            >
+              Next →
+            </button>
+          )}
         </div>
       </div>
     </div>

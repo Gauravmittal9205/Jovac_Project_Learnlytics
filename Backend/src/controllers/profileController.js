@@ -1,85 +1,50 @@
-const User = require('../models/User');
-const { validationResult } = require('express-validator');
+// controllers/profileController.js
+const Profile = require('../models/Profile');
 
-// Get user profile
 exports.getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select('-password');
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.json(user);
-    } catch (error) {
-        console.error('Get profile error:', error);
-        res.status(500).json({ message: 'Error fetching profile' });
+        const profile = await Profile.findOne({ userId: req.params.userId });
+        if (!profile) return res.status(404).json({ message: 'Profile not found' });
+        res.json(profile);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
-// Update user profile
 exports.updateProfile = async (req, res) => {
     try {
-        const { 
-            personal, 
-            contact, 
-            academic,
-            name,
-            email
-        } = req.body;
+        let profile = await Profile.findOne({ userId: req.params.userId });
 
-        // Build profile object
-        const profileFields = {};
-        if (name) profileFields.name = name;
-        if (email) profileFields.email = email;
-        if (personal) profileFields.personal = personal;
-        if (contact) profileFields.contact = contact;
-        if (academic) profileFields.academic = academic;
-
-        // Update user
-        let user = await User.findByIdAndUpdate(
-            req.user.userId,
-            { $set: profileFields },
-            { new: true, runValidators: true }
-        ).select('-password');
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.json({
-            message: 'Profile updated successfully',
-            user
-        });
-    } catch (error) {
-        console.error('Update profile error:', error);
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({ 
-                message: 'Validation error', 
-                errors: Object.values(error.errors).map(err => err.message) 
+        if (!profile) {
+            profile = new Profile({ userId: req.params.userId, ...req.body });
+        } else {
+            // Update only provided fields
+            Object.keys(req.body).forEach(key => {
+                profile[key] = req.body[key];
             });
         }
-        res.status(500).json({ message: 'Error updating profile' });
+
+        await profile.save();
+        res.json({ message: 'Profile saved', profile });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
-// Upload profile picture
-exports.uploadProfilePicture = async (req, res) => {
+exports.createProfile = async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Please upload a file' });
+        const existingProfile = await Profile.findOne({ userId: req.body.userId });
+        if (existingProfile) {
+            return res.status(400).json({ message: 'Profile already exists for this user' });
         }
 
-        const user = await User.findByIdAndUpdate(
-            req.user.userId,
-            { 'profile.picture': req.file.path },
-            { new: true }
-        ).select('-password');
-
-        res.json({
-            message: 'Profile picture uploaded successfully',
-            picture: user.profile.picture
-        });
-    } catch (error) {
-        console.error('Upload profile picture error:', error);
-        res.status(500).json({ message: 'Error uploading profile picture' });
+        const profile = new Profile(req.body);
+        await profile.save();
+        res.status(201).json({ message: 'Profile created', profile });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
     }
 };
