@@ -2,9 +2,9 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import './App.css';
 import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as Router, NavLink, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NavIcons from './NavIcons';
-import Profile from './components/Profile';
 import Help from './Help';
 import About from './About';
 import Resources from './Resources';
@@ -314,7 +314,7 @@ function App() {
           } />
           <Route path="/profile" element={
             <ProtectedRoute>
-              <Profile user={currentUser} />
+              <ProfilePage />
             </ProtectedRoute>
           } />
           <Route path="/dashboard-instructor" element={
@@ -2406,6 +2406,347 @@ function OverviewPage() {
     ))}
   </div>
 </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfilePage(){
+  const session = readSession();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [profile, setProfile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState('');
+
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    personal: {
+      fullName: '',
+      dateOfBirth: '',
+      gender: '',
+      AdhaarNumber: '',
+      Category: ''
+    },
+    contact: {
+      email: '',
+      phone: '',
+      address: '',
+      emergencyContact: ''
+    },
+    academic: {
+      program: '',
+      year: '',
+      semester: '',
+      gpa: ''
+    }
+  });
+
+  useEffect(() => {
+    if (!session) navigate('/login');
+  }, [navigate, session]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setError('');
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:5000/api/profile/me', {
+          headers: { 'x-auth-token': token }
+        });
+        setProfile(res.data);
+        setForm({
+          name: res.data?.name || '',
+          email: res.data?.email || '',
+          personal: {
+            fullName: res.data?.profile?.personal?.fullName || res.data?.name || '',
+            dateOfBirth: res.data?.profile?.personal?.dateOfBirth || '',
+            gender: res.data?.profile?.personal?.gender || '',
+            AdhaarNumber: res.data?.profile?.personal?.AdhaarNumber || '',
+            Category: res.data?.profile?.personal?.Category || ''
+          },
+          contact: {
+            email: res.data?.profile?.contact?.email || res.data?.email || '',
+            phone: res.data?.profile?.contact?.phone || '',
+            address: res.data?.profile?.contact?.address || '',
+            emergencyContact: res.data?.profile?.contact?.emergencyContact || ''
+          },
+          academic: {
+            program: res.data?.profile?.academic?.program || '',
+            year: res.data?.profile?.academic?.year || '',
+            semester: res.data?.profile?.academic?.semester || '',
+            gpa: res.data?.profile?.academic?.gpa || ''
+          }
+        });
+      } catch (err) {
+        const msg = err.response?.data?.message || 'Failed to load profile';
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const basicPersonal = profile?.profile?.personal || {};
+  const basicContact = profile?.profile?.contact || {};
+  const academic = profile?.profile?.academic || {};
+
+  const handleBasicChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNestedChange = (section, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setSuccess('');
+      setError('');
+      const token = localStorage.getItem('token');
+      const payload = {
+        name: form.name,
+        email: form.email,
+        personal: form.personal,
+        contact: form.contact,
+        academic: form.academic
+      };
+      const res = await axios.put('http://localhost:5000/api/profile', payload, {
+        headers: { 'x-auth-token': token, 'Content-Type': 'application/json' }
+      });
+      setSuccess('Profile updated successfully');
+      if (res.data?.user) {
+        setProfile(res.data.user);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to update profile';
+      setError(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="dashboard-layout">
+      {/* Sidebar */}
+      <div className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <div className="logo-shield">L</div>
+            <span className="brand-text">Learnlytics</span>
+          </div>
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? "←" : "→"}
+          </button>
+        </div>
+
+        <div className="sidebar-profile">
+          <div className="profile-avatar">
+            {(profile?.name || 'ST')
+              .split(' ')
+              .map(n => n[0])
+              .join('')
+              .toUpperCase()}
+          </div>
+          <div className="profile-info">
+            <h4>{profile?.name || 'Student'}</h4>
+            <p>{academic.program || 'Program'}</p>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <h5>Main</h5>
+            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Overview</span>
+            </NavLink>
+            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Risk Status</span>
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Profile</span>
+            </NavLink>
+          </div>
+          <div className="nav-section">
+            <h5>Academic</h5>
+            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">My Instructors</span>
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Schedule</span>
+            </NavLink>
+            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Course Analysis</span>
+            </NavLink>
+            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Academic Performance</span>
+            </NavLink>
+          </div>
+          <div className="nav-section">
+            <h5>Tools</h5>
+            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Feedback</span>
+            </NavLink>
+            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Resources</span>
+            </NavLink>
+            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-text">Weekly Report</span>
+            </NavLink>
+          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <button
+            className="logout-btn"
+            onClick={() => {
+              clearSession();
+              navigate("/");
+            }}
+          >
+            <span className="nav-text">Logout</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className={`dashboard-main ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+        <div className="dashboard-header">
+          <div className="header-left">
+            <button
+              className="mobile-sidebar-toggle"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              <span className="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
+            </button>
+            <h1>Profile</h1>
+          </div>
+        </div>
+
+        <div className="dashboard-container">
+          <div className="dashboard-section">
+            <div className="profile-card">
+              {loading ? (
+                <p>Loading...</p>
+              ) : (
+                <>
+                  {error && <p className="error">{error}</p>}
+                  {success && <p className="success">{success}</p>}
+
+                  <div className="profile-details-grid">
+                    <div className="detail-group">
+                      <h3>Basic Details</h3>
+                      <div className="form-grid">
+                        <label className="form-field">
+                          <span className="label">Name</span>
+                          <input className="input" name="name" value={form.name} onChange={handleBasicChange} placeholder="Enter name" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Email</span>
+                          <input className="input" name="email" value={form.email} onChange={handleBasicChange} placeholder="Enter email" />
+                        </label>
+                        <div className="detail readonly"><span>Role</span><strong>{profile?.role || '-'}</strong></div>
+                      </div>
+                    </div>
+
+                    <div className="detail-group">
+                      <h3>Personal</h3>
+                      <div className="form-grid">
+                        <label className="form-field">
+                          <span className="label">Full Name</span>
+                          <input className="input" value={form.personal.fullName} onChange={(e)=>handleNestedChange('personal','fullName', e.target.value)} placeholder="Full name" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Date of Birth</span>
+                          <input className="input" value={form.personal.dateOfBirth} onChange={(e)=>handleNestedChange('personal','dateOfBirth', e.target.value)} placeholder="YYYY-MM-DD" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Gender</span>
+                          <input className="input" value={form.personal.gender} onChange={(e)=>handleNestedChange('personal','gender', e.target.value)} placeholder="Gender" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Category</span>
+                          <input className="input" value={form.personal.Category} onChange={(e)=>handleNestedChange('personal','Category', e.target.value)} placeholder="Category" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Adhaar Number</span>
+                          <input className="input" value={form.personal.AdhaarNumber} onChange={(e)=>handleNestedChange('personal','AdhaarNumber', e.target.value)} placeholder="Adhaar" />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="detail-group">
+                      <h3>Contact</h3>
+                      <div className="form-grid">
+                        <label className="form-field">
+                          <span className="label">Email</span>
+                          <input className="input" value={form.contact.email} onChange={(e)=>handleNestedChange('contact','email', e.target.value)} placeholder="Email" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Phone</span>
+                          <input className="input" value={form.contact.phone} onChange={(e)=>handleNestedChange('contact','phone', e.target.value)} placeholder="Phone" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Address</span>
+                          <input className="input" value={form.contact.address} onChange={(e)=>handleNestedChange('contact','address', e.target.value)} placeholder="Address" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Emergency Contact</span>
+                          <input className="input" value={form.contact.emergencyContact} onChange={(e)=>handleNestedChange('contact','emergencyContact', e.target.value)} placeholder="Emergency Contact" />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="detail-group">
+                      <h3>Academic</h3>
+                      <div className="form-grid">
+                        <label className="form-field">
+                          <span className="label">Program</span>
+                          <input className="input" value={form.academic.program} onChange={(e)=>handleNestedChange('academic','program', e.target.value)} placeholder="Program" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Year</span>
+                          <input className="input" value={form.academic.year} onChange={(e)=>handleNestedChange('academic','year', e.target.value)} placeholder="Year" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">Semester</span>
+                          <input className="input" value={form.academic.semester} onChange={(e)=>handleNestedChange('academic','semester', e.target.value)} placeholder="Semester" />
+                        </label>
+                        <label className="form-field">
+                          <span className="label">GPA</span>
+                          <input className="input" value={form.academic.gpa} onChange={(e)=>handleNestedChange('academic','gpa', e.target.value)} placeholder="GPA" />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <button className="btn" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
