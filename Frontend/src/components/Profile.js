@@ -10,7 +10,7 @@ function Profile({ userId }) {
   useEffect(() => {
     axios.get(`http://localhost:5000/api/profile/${userId}`, {
       headers: {
-        Authorization: `Bearer ${token}` // <--- yaha use karna hai
+        'x-auth-token': token
       }
     })
       .then(res => setProfile(res.data))
@@ -25,7 +25,12 @@ function Profile({ userId }) {
     console.log("userId:", userId);
     console.log("profile data:", profile);
 
-    axios.put(`http://localhost:5000/api/profile/${userId}`, profile)
+    axios.put(`http://localhost:5000/api/profile/${userId}`, profile, {
+      headers: {
+        'x-auth-token': token,
+        'Content-Type': 'application/json'
+      }
+    })
       .then(res => alert("Profile updated successfully!"))
       .catch(err => console.error(err));
 };
