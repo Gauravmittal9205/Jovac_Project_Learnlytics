@@ -4,10 +4,11 @@ import './App.css';
 import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as Router, NavLink, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NavIcons from './NavIcons';
-import Profile from './components/Profile';
+// import Profile from './components/Profile';
 import Help from './Help';
 import About from './About';
 import Resources from './Resources';
+import ProfileNew from './components/ProfileNew';
 //hello world
 
 import {
@@ -312,11 +313,7 @@ function App() {
               <OverviewPage />
             </ProtectedRoute>
           } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile user={currentUser} />
-            </ProtectedRoute>
-          } />
+          <Route path="/profile" element={<ProfileNew />} />
           <Route path="/dashboard-instructor" element={
             <ProtectedRoute roles={['instructor']}>
               <InstructorDashboard />
@@ -2042,66 +2039,72 @@ function ForgotPasswordPage(){
 
 function OverviewPage() {
   
- const session = readSession();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const session = readSession();
+   const navigate = useNavigate();
+   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  useEffect(() => {
-    if (!session) navigate('/login');
-  }, [navigate, session]);
-
-
-  const studentData = {
-    name: "John Doe",
-    course: "Computer Science",
-    year: "3rd Year",
-    semester: "Fall 2024",
-    photo: "👨‍🎓",
-    attendance: 95,
-    avgQuizScore: 87,
-    totalStudyHours: 42,
-    engagementScore: 92,
-    riskLevel: "Low",
-    data: [
-      { week: "Week 1", score: 85 },
-      { week: "Week 2", score: 88 },
-      { week: "Week 3", score: 92 },
-      { week: "Week 4", score: 33 },
-      { week: "Week 5", score: 94 },
-      { week: "Week 6", score: 96 },
-    ],
-    timeData: [
-      { activity: "Lectures", hours: 15, percentage: 35 },
-      { activity: "Assignments", hours: 12, percentage: 28 },
-      { activity: "Study", hours: 10, percentage: 23 },
-      { activity: "Projects", hours: 6, percentage: 14 },
-    ],
-    performanceData: [
-      { subject: "Mathematics", score: 92, status: "excellent" },
-      { subject: "Programming", score: 88, status: "good" },
-      { subject: "Data Structures", score: 85, status: "good" },
-      { subject: "Algorithms", score: 90, status: "excellent" },
-      { subject: "Database", score: 78, status: "needs-improvement" },
-    ],
-    recommendations: [
-      {
-        type: "study",
-        title: "Advanced Algorithms",
-        reason: "Based on your strong performance in basic algorithms",
-      },
-      {
-        type: "practice",
-        title: "Database Design",
-        reason: "Improve your database management skills",
-      },
-      {
-        type: "resource",
-        title: "Math Problem Sets",
-        reason: "Maintain your excellent math performance",
-      },
-    ],
-  };
-  
+   useEffect(() => {
+     if (!session) {
+       navigate('/login');
+       return;
+     }
+   }, [navigate, session]);
+ 
+   // Use data directly from session
+   const userName = session?.name || "Student";
+   const userEmail = session?.email || "";
+ 
+   const studentData = {
+     name: userName,
+     email: userEmail,
+     course: "Computer Science",
+     year: "3rd Year",
+     semester: "Fall 2024",
+     photo: "👨‍🎓",
+     attendance: 95,
+     avgQuizScore: 87,
+     totalStudyHours: 42,
+     engagementScore: 92,
+     riskLevel: "Low",
+     data: [
+       { week: "Week 1", score: 85 },
+       { week: "Week 2", score: 88 },
+       { week: "Week 3", score: 92 },
+       { week: "Week 4", score: 33 },
+       { week: "Week 5", score: 94 },
+       { week: "Week 6", score: 96 },
+     ],
+     timeData: [
+       { activity: "Lectures", hours: 15, percentage: 35 },
+       { activity: "Assignments", hours: 12, percentage: 28 },
+       { activity: "Study", hours: 10, percentage: 23 },
+       { activity: "Projects", hours: 6, percentage: 14 },
+     ],
+     performanceData: [
+       { subject: "Mathematics", score: 92, status: "excellent" },
+       { subject: "Programming", score: 88, status: "good" },
+       { subject: "Data Structures", score: 85, status: "good" },
+       { subject: "Algorithms", score: 90, status: "excellent" },
+       { subject: "Database", score: 78, status: "needs-improvement" },
+     ],
+     recommendations: [
+       {
+         type: "study",
+         title: "Advanced Algorithms",
+         reason: "Based on your strong performance in basic algorithms",
+       },
+       {
+         type: "practice",
+         title: "Database Design",
+         reason: "Improve your database management skills",
+       },
+       {
+         type: "resource",
+         title: "Math Problem Sets",
+         reason: "Maintain your excellent math performance",
+       },
+     ],
+   };
 
   const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
   const Colors = ["#8b5cf6"];
@@ -2202,28 +2205,7 @@ function OverviewPage() {
         
 
         <div className="dashboard-container">
-          {/* Profile + Quick Stats */}
-          {/* <div className="dashboard-section">
-            
-
-            <div className="quick-stats">
-              {[
-                { label: "Attendance", value: `${studentData.attendance}%`, icon: "attendance" },
-                { label: "Avg Quiz Score", value: `${studentData.avgQuizScore}%`, icon: "quiz" },
-                { label: "Study Hours", value: `${studentData.totalStudyHours}h`, icon: "study" },
-                { label: "Engagement", value: `${studentData.engagementScore}%`, icon: "engagement" },
-              ].map((stat, index) => (
-                <div className="stat-card" key={index}>
-                  <div className={`stat-icon ${stat.icon}`}></div>
-                  <div className="stat-content">
-                    <div className="stat-value">{stat.value}</div>
-                    <div className="stat-label">{stat.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div> */}
-          {/* Welcome Banner */}
+          
           <div className="welcome-banner-modern">
             <div className="banner-content-wrapper">
               <div className="banner-text-section">

@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const profileController = require('../../controllers/profileController');
+const authController = require('../../controllers/authController');
 
 // Get profile by userId
-router.get('/:userId', profileController.getProfile);
+router.get('/:userId', authController.getProfile);
 
 // Update profile
-router.put('/:userId', profileController.updateProfile);
+router.put('/:userId', authController.updateProfile);
 
-// Create profile
-router.post('/', profileController.createProfile);
 
 module.exports = router;

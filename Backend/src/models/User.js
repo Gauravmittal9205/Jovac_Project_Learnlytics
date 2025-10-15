@@ -27,23 +27,32 @@ const userSchema = new mongoose.Schema({
         default: 'student'
     },
     profile: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {},
         personal: {
             fullName: String,
             dateOfBirth: String,
             gender: String,
+            phone: String,
+            address: String,
+            bio: String,
             AdhaarNumber: String,
             Category: String
         },
         contact: {
             email: String,
+            alternateEmail: String,
             phone: String,
             address: String,
-            emergencyContact: String
+            emergencyContact: String,
+            emergencyName: String,
+            emergencyRelation: String
         },
         academic: {
             program: String,
             year: String,
             semester: String,
+            studentId: String,
             expectedGraduation: String,
             gpa: String,
             creditsCompleted: String,
@@ -51,6 +60,13 @@ const userSchema = new mongoose.Schema({
             academicStanding: String,
             deansList: String,
             honorSociety: String
+        },
+        preferences: {
+            emailNotifications: { type: Boolean, default: true },
+            smsAlerts: { type: Boolean, default: false },
+            pushNotifications: { type: Boolean, default: true },
+            language: { type: String, default: 'English' },
+            timezone: { type: String, default: 'UTC+5:30' }
         },
         communication: {
             emailNotifications: Boolean,

@@ -120,3 +120,116 @@ exports.getCurrentUser = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// Get user profile by ID
+exports.getProfile = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const user = await User.findById(userId).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            profile: user.profile || {}
+        });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// Update user profile
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { profile } = req.body;
+
+        console.log('=== UPDATE PROFILE REQUEST ===');
+        console.log('User ID:', userId);
+        console.log('Profile data received:', JSON.stringify(profile, null, 2));
+
+        // Find user first
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            console.log('User not found');
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        console.log('Current profile before update:', JSON.stringify(user.profile, null, 2));
+
+        // Initialize profile object if it doesn't exist
+        if (!user.profile) {
+            user.profile = {
+                personal: {},
+                academic: {},
+                contact: {},
+                preferences: {}
+            };
+        }
+
+        // Deep merge each section
+        if (profile.personal) {
+            user.profile.personal = {
+                ...(user.profile.personal || {}),
+                ...profile.personal
+            };
+            console.log('Updated personal:', user.profile.personal);
+        }
+
+        if (profile.academic) {
+            user.profile.academic = {
+                ...(user.profile.academic || {}),
+                ...profile.academic
+            };
+            console.log('Updated academic:', user.profile.academic);
+        }
+
+        if (profile.contact) {
+            user.profile.contact = {
+                ...(user.profile.contact || {}),
+                ...profile.contact
+            };
+            console.log('Updated contact:', user.profile.contact);
+        }
+
+        if (profile.preferences) {
+            user.profile.preferences = {
+                ...(user.profile.preferences || {}),
+                ...profile.preferences
+            };
+            console.log('Updated preferences:', user.profile.preferences);
+        }
+
+        // CRITICAL: Mark profile as modified for nested objects
+        user.markModified('profile');
+        user.markModified('profile.personal');
+        user.markModified('profile.academic');
+        user.markModified('profile.contact');
+        user.markModified('profile.preferences');
+
+        // Save the user
+        const savedUser = await user.save();
+        
+        console.log('Profile saved successfully!');
+        console.log('Saved profile:', JSON.stringify(savedUser.profile, null, 2));
+
+        res.json({
+            message: 'Profile updated successfully',
+            profile: savedUser.profile
+        });
+    } catch (error) {
+        console.error('=== UPDATE PROFILE ERROR ===');
+        console.error('Error:', error);
+        console.error('Stack:', error.stack);
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message 
+        });
+    }
+};
