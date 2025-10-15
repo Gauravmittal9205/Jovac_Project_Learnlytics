@@ -28,6 +28,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  AreaChart,
+  Area,
   Legend,
   RadarChart,
   PolarGrid,
@@ -2042,6 +2044,7 @@ function OverviewPage() {
   const session = readSession();
    const navigate = useNavigate();
    const [sidebarOpen, setSidebarOpen] = useState(true);
+  
 
    useEffect(() => {
      if (!session) {
@@ -2368,6 +2371,7 @@ function OverviewPage() {
             </button>
 
 </div>
+
       </div>
     ))}
   </div>
@@ -6281,152 +6285,1127 @@ function InstructorDashboard(){
         {activeTab === 'overview' && (
           <div className="dashboard-container">
             <div className="dashboard-section">
-              <h2>Welcome, {session?.name || 'Instructor'}!</h2>
-              <p>Manage your courses, track student progress, and view key analytics.</p>
+              {/* Welcome Header with Gradient */}
+              <div style={{
+                background: 'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)',
+                padding: '2rem',
+                borderRadius: '16px',
+                marginBottom: '2rem',
+                color: 'white',
+                boxShadow: '0 4px 20px rgba(26, 123, 217, 0.3)'
+              }}>
+                <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                  Welcome back, {session?.name || 'Instructor'}! 👋
+                </h2>
+                <p style={{ fontSize: '1rem', opacity: '0.95', margin: 0 }}>
+                  Here's what's happening with your courses today
+                </p>
+              </div>
 
-              <div className="quick-stats">
-                <div className="stat-card">
-                  <div className="stat-icon students"></div>
-                  <div className="stat-content">
-                    <div className="stat-value">{instructorData.summary.totalStudents}</div>
-                    <div className="stat-label">Total Students</div>
+              {/* Quick Stats Cards */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '1.5rem',
+                marginBottom: '2rem'
+              }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(26, 123, 217, 0.4)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ position: 'relative', zIndex: 2 }}>
+                    <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>Total Students</div>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.totalStudents}</div>
+                    <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Across all courses</div>
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.1)',
+                    top: '-30px',
+                    right: '-30px'
+                  }}></div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #2f8de4 0%, #1a7bd9 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(47, 141, 228, 0.4)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ position: 'relative', zIndex: 2 }}>
+                    <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>Active Courses</div>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.activeCourses}</div>
+                    <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Currently teaching</div>
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.1)',
+                    top: '-30px',
+                    right: '-30px'
+                  }}></div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #16b0a9 0%, #0ea89e 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(22, 176, 169, 0.4)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ position: 'relative', zIndex: 2 }}>
+                    <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>Avg Engagement</div>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.avgEngagementPct}%</div>
+                    <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Overall performance</div>
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.1)',
+                    top: '-30px',
+                    right: '-30px'
+                  }}></div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ position: 'relative', zIndex: 2 }}>
+                    <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>At Risk Students</div>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.atRiskCount}</div>
+                    <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Need attention</div>
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.1)',
+                    top: '-30px',
+                    right: '-30px'
+                  }}></div>
+                </div>
+              </div>
+
+              {/* Main Content Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+                gap: '2rem',
+                marginBottom: '2rem'
+              }}>
+                {/* Quick Actions Card */}
+                <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <h4 style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    marginBottom: '1.5rem',
+                    color: '#1f2937',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>⚡</span>
+                    Quick Actions
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button style={{
+                      padding: '0.875rem 1.25rem',
+                      background: 'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(26, 123, 217, 0.3)',
+                      transition: 'transform 0.2s ease',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+                    >
+                      <span style={{ fontSize: '1.25rem' }}>📝</span>
+                      Create Assignment
+                    </button>
+                    <button style={{
+                      padding: '0.875rem 1.25rem',
+                      background: 'linear-gradient(135deg, #2f8de4 0%, #1a7bd9 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(47, 141, 228, 0.3)',
+                      transition: 'transform 0.2s ease',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+                    >
+                      <span style={{ fontSize: '1.25rem' }}>📢</span>
+                      Post Announcement
+                    </button>
+                    <button style={{
+                      padding: '0.875rem 1.25rem',
+                      background: 'linear-gradient(135deg, #16b0a9 0%, #0ea89e 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(22, 176, 169, 0.3)',
+                      transition: 'transform 0.2s ease',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+                    >
+                      <span style={{ fontSize: '1.25rem' }}>📅</span>
+                      Schedule Session
+                    </button>
                   </div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon courses"></div>
-                  <div className="stat-content">
-                    <div className="stat-value">{instructorData.summary.activeCourses}</div>
-                    <div className="stat-label">Active Courses</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon engagement"></div>
-                  <div className="stat-content">
-                    <div className="stat-value">{instructorData.summary.avgEngagementPct}%</div>
-                    <div className="stat-label">Avg Engagement</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon risk"></div>
-                  <div className="stat-content">
-                    <div className="stat-value">{instructorData.summary.atRiskCount}</div>
-                    <div className="stat-label">At Risk</div>
+
+                {/* Upcoming Items Card */}
+                <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <h4 style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    marginBottom: '1.5rem',
+                    color: '#1f2937',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>📋</span>
+                    Upcoming Items
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{
+                      padding: '1rem',
+                      background: '#f9fafb',
+                      borderRadius: '12px',
+                      borderLeft: '4px solid #667eea'
+                    }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.25rem' }}>
+                        Assignment 2 due Friday
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>CS101</div>
+                    </div>
+                    <div style={{
+                      padding: '1rem',
+                      background: '#f9fafb',
+                      borderRadius: '12px',
+                      borderLeft: '4px solid #f093fb'
+                    }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.25rem' }}>
+                        Quiz: Trees & Graphs next Tuesday
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>DS201</div>
+                    </div>
+                    <div style={{
+                      padding: '1rem',
+                      background: '#f9fafb',
+                      borderRadius: '12px',
+                      borderLeft: '4px solid #4facfe'
+                    }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.25rem' }}>
+                        Office Hours: Thursday 3PM
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>All Courses</div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="cards-grid">
-                <div className="card">
-                  <h4>Quick Actions</h4>
-                  <div className="pill-row">
-                    <button className="btn small">Create Assignment</button>
-                    <button className="btn small">Post Announcement</button>
-                    <button className="btn small">Schedule Session</button>
-                  </div>
-                </div>
-                <div className="card">
-                  <h4>Upcoming Items</h4>
-                  <ul className="list plain">
-                    <li>Assignment 2 due Friday (CS101)</li>
-                    <li>Quiz: Trees & Graphs next Tuesday (DS201)</li>
-                    <li>Office Hours: Thursday 3PM</li>
-                  </ul>
+
+              {/* Recent Activity */}
+              <div style={{
+                background: 'white',
+                padding: '1.5rem',
+                borderRadius: '16px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb'
+              }}>
+                <h4 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  marginBottom: '1.5rem',
+                  color: '#1f2937',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>🔔</span>
+                  Recent Activity
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {[
+                    { icon: '👤', text: 'Aarav Singh submitted Assignment 1', time: '2 hours ago', color: '#1a7bd9' },
+                    { icon: '📊', text: 'New analytics report available for CS101', time: '5 hours ago', color: '#16b0a9' },
+                    { icon: '💬', text: 'Isha Patel posted a question in DS201', time: '1 day ago', color: '#2f8de4' }
+                  ].map((activity, index) => (
+                    <div key={index} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      padding: '1rem',
+                      background: '#f9fafb',
+                      borderRadius: '12px',
+                      transition: 'background 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#f9fafb'}
+                    >
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: activity.color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.25rem',
+                        flexShrink: 0
+                      }}>
+                        {activity.icon}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>
+                          {activity.text}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                          {activity.time}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         )}
+
 
         {activeTab === 'courses' && (
           <div className="dashboard-container">
-            <div className="dashboard-section courses-bg">
-              <div className="courses-bg-img" style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/classroom.webp'})` }}></div>
-              <h2>My Courses</h2>
-              <div className="courses-grid">
-                {instructorData.courses.map(course => (
-                  <div key={course.id} className="course-card">
-                    <div className="course-card-header">
-                      <div>
-                        <h4 className="course-title">{course.title}</h4>
-                        <div className="course-sub">{course.code} • Sec {course.section} • {course.term}</div>
+            <div className="dashboard-section">
+              <h2 style={{ marginBottom: '2rem', fontSize: '1.75rem', fontWeight: '700' }}>My Courses</h2>
+              
+              {/* Courses Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                gap: '2rem'
+              }}>
+                {instructorData.courses.map((course, index) => {
+                  // Course gradient colors
+                  const courseGradients = [
+                    { bg: 'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)', light: '#e0f2fe' },
+                    { bg: 'linear-gradient(135deg, #2f8de4 0%, #1a7bd9 100%)', light: '#ecfeff' },
+                    { bg: 'linear-gradient(135deg, #16b0a9 0%, #0ea89e 100%)', light: '#cffafe' },
+                    { bg: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)', light: '#d1fae5' }
+                  ];
+                  
+                  const gradient = courseGradients[index % courseGradients.length];
+                  
+                  return (
+                    <div 
+                      key={course.id}
+                      style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                        border: '1px solid #e5e7eb',
+                        overflow: 'hidden',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.08)';
+                      }}
+                    >
+                      {/* Course Header with Gradient */}
+                      <div style={{
+                        background: gradient.bg,
+                        padding: '1.5rem',
+                        color: 'white',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        {/* Decorative Circle */}
+                        <div style={{
+                          position: 'absolute',
+                          width: '150px',
+                          height: '150px',
+                          borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.1)',
+                          top: '-50px',
+                          right: '-50px'
+                        }}></div>
+                        
+                        <div style={{ position: 'relative', zIndex: 2 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                            <h4 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>
+                              {course.title}
+                            </h4>
+                            <span style={{
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              background: course.risk === 'Low' ? 'rgba(74, 222, 128, 0.3)' 
+                                : course.risk === 'Medium' ? 'rgba(251, 191, 36, 0.3)' 
+                                : 'rgba(248, 113, 113, 0.3)',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              border: `1px solid ${course.risk === 'Low' ? '#4ade80' 
+                                : course.risk === 'Medium' ? '#fbbf24' 
+                                : '#f87171'}`
+                            }}>
+                              {course.risk} Risk
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.875rem', opacity: '0.9' }}>
+                            {course.code} • Sec {course.section} • {course.term}
+                          </div>
+                        </div>
                       </div>
-                      <span className={`risk-chip ${String(course.risk).toLowerCase()}`}>{course.risk} Risk</span>
+
+                      {/* Course Metrics */}
+                      <div style={{ padding: '1.5rem' }}>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '1rem',
+                          marginBottom: '1.5rem'
+                        }}>
+                          <div style={{
+                            textAlign: 'center',
+                            padding: '1rem',
+                            background: gradient.light,
+                            borderRadius: '12px'
+                          }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.25rem' }}>
+                              {course.enrolled}/{course.limit}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>
+                              Enrolled
+                            </div>
+                          </div>
+                          
+                          <div style={{
+                            textAlign: 'center',
+                            padding: '1rem',
+                            background: gradient.light,
+                            borderRadius: '12px'
+                          }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.25rem' }}>
+                              {course.avgScore}%
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>
+                              Avg Score
+                            </div>
+                          </div>
+                          
+                          <div style={{
+                            textAlign: 'center',
+                            padding: '1rem',
+                            background: gradient.light,
+                            borderRadius: '12px'
+                          }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.25rem' }}>
+                              {course.lastActivity}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>
+                              Activity
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Course Details */}
+                        <div style={{
+                          background: '#f9fafb',
+                          padding: '1rem',
+                          borderRadius: '12px',
+                          marginBottom: '1rem'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                            <span style={{ fontSize: '1rem' }}>📅</span>
+                            <div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>Schedule</div>
+                              <div style={{ fontSize: '0.875rem', color: '#1f2937', fontWeight: '600' }}>{course.schedule}</div>
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                            <span style={{ fontSize: '1rem' }}>🕐</span>
+                            <div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>Office Hours</div>
+                              <div style={{ fontSize: '0.875rem', color: '#1f2937', fontWeight: '600' }}>{course.officeHours}</div>
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '1rem' }}>📄</span>
+                            <div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>Syllabus</div>
+                              <a 
+                                href={course.syllabusUrl} 
+                                style={{ 
+                                  fontSize: '0.875rem', 
+                                  color: '#1a7bd9', 
+                                  fontWeight: '600',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                View Document →
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(2, 1fr)',
+                          gap: '0.75rem'
+                        }}>
+                          <button 
+                            onClick={() => { setSelectedCourse(course); setCourseView('view'); }}
+                            style={{
+                              padding: '0.75rem',
+                              background: gradient.bg,
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '10px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'opacity 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                          >
+                            📖 View
+                          </button>
+                          
+                          <button 
+                            onClick={() => openManage(course)}
+                            style={{
+                              padding: '0.75rem',
+                              background: '#1f2937',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '10px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'background 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#374151'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#1f2937'}
+                          >
+                            ⚙️ Manage
+                          </button>
+                          
+                          <button 
+                            onClick={() => { setSelectedCourse(course); setCourseView('gradebook'); }}
+                            style={{
+                              padding: '0.75rem',
+                              background: 'white',
+                              color: '#1f2937',
+                              border: '2px solid #e5e7eb',
+                              borderRadius: '10px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'border-color 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#9ca3af'}
+                            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                          >
+                            📊 Gradebook
+                          </button>
+                          
+                          <button 
+                            onClick={() => { setSelectedCourse(course); setCourseView('announcements'); }}
+                            style={{
+                              padding: '0.75rem',
+                              background: 'white',
+                              color: '#1f2937',
+                              border: '2px solid #e5e7eb',
+                              borderRadius: '10px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'border-color 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#9ca3af'}
+                            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                          >
+                            📢 Announcements
+                          </button>
+                        </div>
                       </div>
-                    <div className="course-metrics">
-                      <div className="metric"><span className="metric-label">Enrolled</span><span className="metric-value">{course.enrolled}/{course.limit}</span></div>
-                      <div className="metric"><span className="metric-label">Avg Score</span><span className="metric-value">{course.avgScore}%</span></div>
-                      <div className="metric"><span className="metric-label">Last Activity</span><span className="metric-value">{course.lastActivity}</span></div>
                     </div>
-                    <div className="course-extra">
-                      <div className="extra-item"><span className="extra-label">Schedule</span><span className="extra-value">{course.schedule}</span></div>
-                      <div className="extra-item"><span className="extra-label">Office Hours</span><span className="extra-value">{course.officeHours}</span></div>
-                      <div className="extra-item"><span className="extra-label">Syllabus</span><a className="extra-link" href={course.syllabusUrl}>Open</a></div>
-                    </div>
-                    <div className="course-actions">
-                      <button className="btn small" onClick={() => { setSelectedCourse(course); setCourseView('view'); }}>View</button>
-                      <button className="btn small" onClick={() => openManage(course)}>Manage</button>
-                      <button className="btn small ghost" onClick={() => { setSelectedCourse(course); setCourseView('gradebook'); }}>Gradebook</button>
-                      <button className="btn small ghost" onClick={() => { setSelectedCourse(course); setCourseView('announcements'); }}>Announcements</button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+
+              {/* Add New Course Button */}
+              <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                <button style={{
+                  padding: '1rem 2.5rem',
+                  background: 'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(26, 123, 217, 0.3)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 123, 217, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 123, 217, 0.3)';
+                }}
+                >
+                  ➕ Add New Course
+                </button>
               </div>
             </div>
           </div>
         )}
+
 
         {activeTab === 'students' && (
           <div className="dashboard-container">
             <div className="dashboard-section">
-              <h2>Students</h2>
-              <div className="list">
-                {instructorData.students.map(s => (
-                  <div key={s.id} className="list-item">
-                    <div className="list-item-main">
-                      <strong>{s.name}</strong>
-                      <span className="muted">{s.course}</span>
+              <h2 style={{ marginBottom: '2rem', fontSize: '1.75rem', fontWeight: '700' }}>My Students</h2>
+              
+              {/* Students Grid with Avatar Cards */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                gap: '2rem',
+                padding: '1rem'
+              }}>
+                {instructorData.students.map((student, index) => {
+                  // Avatar colors - vibrant gradients
+                  const avatarColors = [
+                    'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)',
+                    'linear-gradient(135deg, #2f8de4 0%, #1a7bd9 100%)',
+                    'linear-gradient(135deg, #16b0a9 0%, #0ea89e 100%)',
+                    'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                    'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
+                  ];
+                  
+                  return (
+                    <div 
+                      key={student.id}
+                      onClick={() => navigate('/student-dashboard')}
+                      style={{
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        padding: '1.5rem',
+                        borderRadius: '16px',
+                        background: 'white',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        border: '1px solid #e5e7eb'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-8px)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                      }}
+                    >
+                      {/* Avatar Circle */}
+                      <div style={{
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '50%',
+                        background: avatarColors[index % avatarColors.length],
+                        margin: '0 auto 1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '3rem',
+                        fontWeight: '700',
+                        color: 'white',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        {/* Avatar Initial */}
+                        <span style={{ zIndex: 2 }}>
+                          {student.name.charAt(0).toUpperCase()}
+                        </span>
+                        
+                        {/* Decorative Circle */}
+                        <div style={{
+                          position: 'absolute',
+                          width: '80px',
+                          height: '80px',
+                          borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.2)',
+                          top: '-20px',
+                          right: '-20px'
+                        }}></div>
+                      </div>
+                      
+                      {/* Student Name */}
+                      <h3 style={{
+                        fontSize: '1.125rem',
+                        fontWeight: '600',
+                        color: '#1f2937',
+                        marginBottom: '0.5rem',
+                        transition: 'color 0.3s ease'
+                      }}>
+                        {student.name}
+                      </h3>
+                      
+                      {/* Course Badge */}
+                      <div style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '12px',
+                        background: '#f3f4f6',
+                        color: '#6b7280',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        marginBottom: '0.75rem'
+                      }}>
+                        {student.course}
+                      </div>
+                      
+                      {/* Engagement Bar */}
+                      <div style={{ marginTop: '1rem' }}>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '0.5rem'
+                        }}>
+                          <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>
+                            Engagement
+                          </span>
+                          <span style={{ 
+                            fontSize: '0.875rem', 
+                            fontWeight: '700',
+                            color: student.engagementPct >= 80 ? '#10b981' : student.engagementPct >= 60 ? '#f59e0b' : '#ef4444'
+                          }}>
+                            {student.engagementPct}%
+                          </span>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div style={{
+                          width: '100%',
+                          height: '8px',
+                          background: '#e5e7eb',
+                          borderRadius: '4px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{
+                            width: `${student.engagementPct}%`,
+                            height: '100%',
+                            background: student.engagementPct >= 80 
+                              ? 'linear-gradient(90deg, #4ade80 0%, #22c55e 100%)'
+                              : student.engagementPct >= 60 
+                              ? 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)'
+                              : 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)',
+                            borderRadius: '4px',
+                            transition: 'width 0.5s ease'
+                          }}></div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="list-item-meta">
-                      <span>Engagement {s.engagementPct}%</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+              
+              {/* Add More Students Button */}
+              <div style={{ 
+                marginTop: '2rem', 
+                textAlign: 'center' 
+              }}>
+                <button style={{
+                  padding: '0.75rem 2rem',
+                  background: 'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(26, 123, 217, 0.3)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 123, 217, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 123, 217, 0.3)';
+                }}
+                >
+                  + Add New Student
+                </button>
               </div>
             </div>
           </div>
         )}
 
+
         {activeTab === 'analytics' && (
           <div className="dashboard-container">
             <div className="dashboard-section">
-              <h2>Analytics</h2>
-              <div className="analytics-grid">
-                <div className="analytics-card">
-                  <h4>Weekly Engagement</h4>
-                  <div className="trend-chart-mini">
-                    {instructorData.analytics.weeklyEngagement.map((score, index) => (
-                      <div key={index} className="trend-point" style={{
-                        left: `${(index / (instructorData.analytics.weeklyEngagement.length - 1)) * 100}%`,
-                        bottom: `${score}%`
-                      }}>
-                        <div className="trend-dot"></div>
-                        <div className="trend-value">{score}%</div>
-                      </div>
-                    ))}
-                    <div className="trend-line"></div>
+              <h2 style={{ marginBottom: '2rem', fontSize: '1.75rem', fontWeight: '700' }}>Analytics & Performance</h2>
+              
+              {/* Summary Cards */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+                gap: '1.5rem', 
+                marginBottom: '2rem' 
+              }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(26, 123, 217, 0.4)'
+                }}>
+                  <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>Total Students</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.totalStudents}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Across all courses</div>
+                </div>
+                
+                <div style={{
+                  background: 'linear-gradient(135deg, #2f8de4 0%, #1a7bd9 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(47, 141, 228, 0.4)'
+                }}>
+                  <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>Active Courses</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.activeCourses}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Currently teaching</div>
+                </div>
+                
+                <div style={{
+                  background: 'linear-gradient(135deg, #16b0a9 0%, #0ea89e 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(22, 176, 169, 0.4)'
+                }}>
+                  <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>Avg Engagement</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.avgEngagementPct}%</div>
+                  <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Overall performance</div>
+                </div>
+                
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+                }}>
+                  <div style={{ fontSize: '0.875rem', opacity: '0.9', marginBottom: '0.5rem' }}>At Risk Students</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '700' }}>{instructorData.summary.atRiskCount}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: '0.8', marginTop: '0.5rem' }}>Needs attention</div>
+                </div>
+              </div>
+
+              {/* Charts Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+                {/* Weekly Engagement Chart */}
+                <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1f2937' }}>
+                    Weekly Engagement Trend
+                  </h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={instructorData.analytics.weeklyEngagement.map((value, index) => ({
+                      week: `Week ${index + 1}`,
+                      engagement: value
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="week" stroke="#6b7280" style={{ fontSize: '0.75rem' }} />
+                      <YAxis stroke="#6b7280" style={{ fontSize: '0.75rem' }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          background: 'white', 
+                          border: '1px solid #e5e7eb', 
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="engagement" 
+                        stroke="#667eea" 
+                        strokeWidth={3}
+                        dot={{ fill: '#667eea', r: 5 }}
+                        activeDot={{ r: 7 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Risk Breakdown Chart - 3D Style */}
+                <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1f2937' }}>
+                    Risk Breakdown
+                  </h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={instructorData.analytics.riskBreakdown}
+                        cx="50%"
+                        cy="45%"
+                        startAngle={180}
+                        endAngle={0}
+                        innerRadius={60}
+                        outerRadius={110}
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, value, label }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = outerRadius + 30;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          return (
+                            <text 
+                              x={x} 
+                              y={y} 
+                              fill="#1f2937" 
+                              textAnchor={x > cx ? 'start' : 'end'} 
+                              dominantBaseline="central"
+                              style={{ fontSize: '0.875rem', fontWeight: '600' }}
+                            >
+                              {`${label}: ${value}`}
+                            </text>
+                          );
+                        }}
+                      >
+                        {instructorData.analytics.riskBreakdown.map((entry, index) => {
+                          const colors = [
+                            { main: '#4ade80', shadow: '#22c55e' },
+                            { main: '#fbbf24', shadow: '#f59e0b' },
+                            { main: '#f87171', shadow: '#ef4444' }
+                          ];
+                          return (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={colors[index % colors.length].main}
+                              stroke={colors[index % colors.length].shadow}
+                              strokeWidth={3}
+                            />
+                          );
+                        })}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          background: 'white', 
+                          border: '1px solid #e5e7eb', 
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        borderRadius: '50%', 
+                        background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
+                        boxShadow: '0 2px 4px rgba(74, 222, 128, 0.3)'
+                      }}></div>
+                      <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Low: 18</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        borderRadius: '50%', 
+                        background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                        boxShadow: '0 2px 4px rgba(251, 191, 36, 0.3)'
+                      }}></div>
+                      <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Medium: 4</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        borderRadius: '50%', 
+                        background: 'linear-gradient(135deg, #f87171 0%, #ef4444 100%)',
+                        boxShadow: '0 2px 4px rgba(248, 113, 113, 0.3)'
+                      }}></div>
+                      <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>High: 2</span>
+                    </div>
                   </div>
                 </div>
-                <div className="analytics-card">
-                  <h4>Risk Breakdown</h4>
-                  <div className="pill-row">
-                    {instructorData.analytics.riskBreakdown.map((r, idx) => (
-                      <span key={idx} className="pill">{r.label}: {r.value}</span>
-                    ))}
-                  </div>
-                </div>
+
+              </div>
+
+              {/* Course Performance Bar Chart */}
+              <div style={{
+                background: 'white',
+                padding: '1.5rem',
+                borderRadius: '16px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb',
+                marginBottom: '2rem'
+              }}>
+                <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1f2937' }}>
+                  Course Performance Overview
+                </h4>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={instructorData.courses.map(course => ({
+                    name: course.code,
+                    avgScore: course.avgScore,
+                    enrolled: course.enrolled
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '0.875rem' }} />
+                    <YAxis stroke="#6b7280" style={{ fontSize: '0.875rem' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: 'white', 
+                        border: '1px solid #e5e7eb', 
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="avgScore" fill="#667eea" name="Average Score" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="enrolled" fill="#4facfe" name="Enrolled Students" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Student Engagement Area Chart */}
+              <div style={{
+                background: 'white',
+                padding: '1.5rem',
+                borderRadius: '16px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb'
+              }}>
+                <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1f2937' }}>
+                  Student Engagement Distribution
+                </h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={instructorData.students.map(student => ({
+                    name: student.name.split(' ')[0],
+                    engagement: student.engagementPct
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '0.875rem' }} />
+                    <YAxis stroke="#6b7280" style={{ fontSize: '0.875rem' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: 'white', 
+                        border: '1px solid #e5e7eb', 
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="engagement" 
+                      stroke="#f093fb" 
+                      fill="url(#colorEngagement)" 
+                      strokeWidth={2}
+                    />
+                    <defs>
+                      <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f093fb" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#f093fb" stopOpacity={0.1}/>
+                      </linearGradient>
+                    </defs>
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
         )}
+
 
         {activeTab === 'resources' && (
           <div className="dashboard-container">
@@ -6434,8 +7413,8 @@ function InstructorDashboard(){
               <h2>Resources</h2>
               <div className="resource-tiles">
                 {[
-                  { key: 'guides', title: 'Guides', color: '#f59e0b', desc: 'Best practices and how-tos', icon: '📘', count: 8, highlights: ['Engagement tips', 'Assessment design'] },
-                  { key: 'templates', title: 'Templates', color: '#ef4444', desc: 'Rubrics, syllabi, checklists', icon: '🧩', count: 12, highlights: ['Project rubric', 'Syllabus v2.1'] },
+                  { key: 'guides', title: 'Guides', color: '#fbbf24', desc: 'Best practices and how-tos', icon: '📘', count: 8, highlights: ['Engagement tips', 'Assessment design'] },
+                  { key: 'templates', title: 'Templates', color: '#f87171', desc: 'Rubrics, syllabi, checklists', icon: '🧩', count: 12, highlights: ['Project rubric', 'Syllabus v2.1'] },
                   { key: 'policies', title: 'Policies', color: '#8b5cf6', desc: 'Classroom and grading policies', icon: '⚖️', count: 5, highlights: ['Late work policy', 'Academic integrity'] },
                   { key: 'tools', title: 'Tools', color: '#f97316', desc: 'Integrations and utilities', icon: '🛠️', count: 6, highlights: ['Plagiarism checker', 'LMS sync'] }
                 ].map((tile, idx) => (
