@@ -6367,3 +6367,571 @@ dashboard-layout {
     font-size: 0.9rem;
   }
 }
+/* Quiz Progress Bar */
+.progress-bar-quiz {
+  width: 150px;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill-quiz {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-fill-quiz::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+
+/* Quiz Loading Spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2rem;
+  color: #667eea;
+}
+
+.loading-spinner::before {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+/* Circular Progress Bar for Quiz Results */
+.score-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: conic-gradient(#667eea 0deg, #667eea calc(var(--score, 0) * 3.6deg), #e9ecef calc(var(--score, 0) * 3.6deg));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.score-circle::before {
+  content: '';
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.score-number {
+  position: relative;
+  z-index: 2;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #667eea;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced circular progress with animation */
+.score-circle {
+  animation: scoreCircleAppear 0.8s ease-out;
+}
+
+@keyframes scoreCircleAppear {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(180deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+/* Progress ring for dashboard */
+.progress-ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  position: relative;
+  margin: 0 auto;
+}
+
+.progress-ring-bg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #e9ecef;
+  position: absolute;
+}
+
+.progress-ring-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+    background: conic-gradient(from 0deg, #4caf50 calc(var(--progress, 0) * 1%), transparent calc(var(--progress, 0) * 1%));
+    position: absolute;
+  transition: all 0.5s ease;
+}
+
+.progress-ring-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  z-index: 2;
+}
+
+/* Pulse animation for active progress */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+  }
+}
+
+.score-circle.active {
+  animation: pulse 2s infinite;
+}
+
+
+/* Analytics Summary Styling */
+.analytics-summary {
+  display: grid;
+  gap: 15px;
+}
+
+.analytics-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.analytics-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.analytics-value {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+/* Enhanced Card Interactions */
+.dashboard-card {
+  cursor: pointer;
+}
+
+.dashboard-card:hover .card-icon {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}
+
+/* Loading Animation for Cards */
+@keyframes cardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-card {
+  animation: cardSlideIn 0.6s ease-out;
+}
+
+.dashboard-card:nth-child(1) { animation-delay: 0.1s; }
+.dashboard-card:nth-child(2) { animation-delay: 0.2s; }
+.dashboard-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Modern Overview Page Styles */
+.welcome-banner-modern {
+  background: linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(26, 123, 217, 0.2);
+}
+
+.banner-content-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.banner-text-section {
+  flex: 1;
+}
+
+.banner-date-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
+.banner-welcome-title {
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.banner-welcome-subtitle {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 16px;
+  margin: 0;
+}
+
+.banner-illustration-section {
+  position: relative;
+  width: 200px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.illustration-character-3d {
+  font-size: 80px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.floating-element {
+  position: absolute;
+  font-size: 24px;
+  animation: floatAround 4s ease-in-out infinite;
+}
+
+.floating-element.elem-1 {
+  top: 10%;
+  right: 20%;
+  animation-delay: 0s;
+}
+
+.floating-element.elem-2 {
+  top: 30%;
+  left: 10%;
+  animation-delay: 1s;
+}
+
+.floating-element.elem-3 {
+  bottom: 20%;
+  right: 10%;
+  animation-delay: 2s;
+}
+
+.floating-element.elem-4 {
+  bottom: 10%;
+  left: 20%;
+  animation-delay: 1.5s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes floatAround {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(5px, -5px) rotate(5deg);
+  }
+  50% {
+    transform: translate(0, -10px) rotate(0deg);
+  }
+  75% {
+    transform: translate(-5px, -5px) rotate(-5deg);
+  }
+}
+
+/* Overview Grid Layout */
+.overview-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.overview-left-col,
+.overview-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.modern-section-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e6e8eb;
+  margin-bottom: 2vh;
+}
+
+.modern-section-heading {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 20px 0;
+}
+
+.section-header-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.see-all-link {
+  background: none;
+  border: none;
+  color: #1a7bd9;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.see-all-link:hover {
+  text-decoration: underline;
+}
+
+/* Finance Cards */
+.finance-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.finance-stat-card {
+  background: #f8fafc;
+  border: 2px solid #e6e8eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.finance-stat-card.finance-highlighted {
+  background: linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%);
+  border-color: #1a7bd9;
+}
+
+.finance-stat-card.finance-highlighted .finance-value,
+.finance-stat-card.finance-highlighted .finance-label-text {
+  color: #ffffff;
+}
+
+.finance-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(26, 123, 217, 0.15);
+}
+
+.finance-icon-wrapper {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.finance-details {
+  width: 100%;
+}
+
+.finance-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.finance-label-text {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Enrolled Courses */
+.enrolled-courses-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.enrolled-course-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #e6f2ff 100%);
+  border: 1px solid #e6e8eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.enrolled-course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(26, 123, 217, 0.15);
+}
+
+.course-icon-display {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.course-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.course-view-button {
+  background: linear-gradient(135deg, #1a7bd9 0%, #16b0a9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.course-view-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(26, 123, 217, 0.3);
+}
+
+/* Daily Notices */
+.daily-notices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notice-list-item {
+  background: #f8fafc;
+  border: 1px solid #e6e8eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.notice-item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.notice-item-description {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+
+.notice-see-more-btn {
+  background: none;
+  border: none;
+  color: #1a7bd9;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.notice-see-more-btn:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .overview-main-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .finance-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .enrolled-courses-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .banner-welcome-title {
+    font-size: 28px;
+  }
+  
+  .banner-illustration-section {
+    display: none;
+  }
+}

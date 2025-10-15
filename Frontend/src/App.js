@@ -2,9 +2,9 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import './App.css';
 import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as Router, NavLink, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NavIcons from './NavIcons';
+import Profile from './components/Profile';
 import Help from './Help';
 import About from './About';
 import Resources from './Resources';
@@ -314,7 +314,7 @@ function App() {
           } />
           <Route path="/profile" element={
             <ProtectedRoute>
-              <ProfilePage />
+              <Profile user={currentUser} />
             </ProtectedRoute>
           } />
           <Route path="/dashboard-instructor" element={
@@ -2199,48 +2199,12 @@ function OverviewPage() {
 
       {/* Main Content */}
       <div className={`dashboard-main ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
-        <div className="dashboard-header">
-          <div className="header-left">
-            <button
-              className="mobile-sidebar-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <span className="hamburger">
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
-            </button>
-            <h1>Overview</h1>
-          </div>
-          <div className="header-right">
-            <div className="header-stats">
-              <span className="stat-item">
-                <span className="stat-value">{studentData.engagementScore}%</span>
-                <span className="stat-label">Engagement</span>
-              </span>
-              <span className="stat-item">
-                <span className="stat-value">{studentData.riskLevel}</span>
-                <span className="stat-label">Risk Level</span>
-              </span>
-            </div>
-          </div>
-        </div>
+        
 
         <div className="dashboard-container">
           {/* Profile + Quick Stats */}
-          <div className="dashboard-section">
-            <div className="profile-card">
-              <div className="profile-info">
-                <div className="profile-photo">{studentData.photo}</div>
-                <div className="profile-details">
-                  <h3>{studentData.name}</h3>
-                  <p>
-                    {studentData.course} • {studentData.year} {studentData.semester}
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* <div className="dashboard-section">
+            
 
             <div className="quick-stats">
               {[
@@ -2258,82 +2222,101 @@ function OverviewPage() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Charts Section */}
-          <div className="dashboard-section">
-            <h2 className="section-title">Analytics & Performance</h2>
-            <div className="charts-grid">
-              {/* Engagement Trend BarChart */}
-              <div className="chart-card p-4 shadow-lg rounded-2xl bg-white">
-                <h3 className="text-lg font-semibold mb-4">Engagement Trend</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={studentData.data}
-                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-                    <YAxis domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
-                    <Tooltip formatter={(value) => `${value}%`} labelStyle={{ fontWeight: "bold" }} />
-                    <Bar dataKey="score" fill="#2563eb" radius={[8, 8, 0, 0]}>
-                      <LabelList dataKey="score" position="top" formatter={(val) => `${val}%`} fill="#2563eb" fontSize={12} fontWeight="bold" />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+          </div> */}
+          {/* Welcome Banner */}
+          <div className="welcome-banner-modern">
+            <div className="banner-content-wrapper">
+              <div className="banner-text-section">
+                <p className="banner-date-text">September 4, 2023</p>
+                <h1 className="banner-welcome-title">Welcome back, {studentData.name.split(' ')[0]}!</h1>
+                <p className="banner-welcome-subtitle">Always stay updated in your student portal</p>
               </div>
-
-              {/* Time Distribution PieChart */}
-              <div className="chart-card p-6 shadow-lg rounded-2xl bg-white">
-                <h3 className="text-lg font-semibold mb-4">Time Spent Distribution</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie
-                      data={studentData.timeData}
-                      dataKey="percentage"
-                      nameKey="activity"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={120}
-                      paddingAngle={3}
-                    >
-                      {studentData.timeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value, name, props) => [`${value}%`, `${props.payload.activity} (${props.payload.hours}h)`]} />
-                    <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" formatter={(value, entry) => `${value}: ${entry.payload.hours}h`} />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="banner-illustration-section">
+                <div className="illustration-character-3d">👨‍🎓</div>
+                <div className="floating-element elem-1">🎓</div>
+                <div className="floating-element elem-2">📚</div>
+                <div className="floating-element elem-3">🔒</div>
+                <div className="floating-element elem-4">☕</div>
               </div>
-
-              {/* Performance Comparison BarChart */}
-              <div className="chart-card p-6 shadow-lg rounded-2xl bg-white w-full h-[400px]">
-                <h3 className="text-xl font-semibold mb-6">Performance Comparison</h3>
-                <ResponsiveContainer width="100%" height="90%">
-                  <BarChart
-                    layout="vertical"
-                    data={studentData.performanceData}
-                    margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
-                    barCategoryGap="20%"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
-                    <YAxis type="category" dataKey="subject" tick={{ fontSize: 14, fill: "#374151" }} />
-                    <Tooltip formatter={(value) => `${value}%`} />
-                    <Bar dataKey="score" barSize={20} radius={[0, 10, 10, 0]} animationDuration={1200}>
-                      {studentData.performanceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={Colors[index % Colors.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              
             </div>
           </div>
+          <div className="overview-main-grid">
+          <div className="overview-left-col">
+          <div className="modern-section-card">
+                <h2 className="modern-section-heading">Quick Stat</h2>
+                <div className="finance-cards-grid">
+                  <div className="finance-stat-card">
+                    <div className="finance-icon-wrapper">✅</div>
+                    <div className="finance-details">
+                      <p className="finance-value">95%</p>
+                      <p className="finance-label-text">Attendence</p>
+                    </div>
+                  </div>
+                  <div className="finance-stat-card finance-highlighted">
+                    <div className="finance-icon-wrapper">📈</div>
+                    <div className="finance-details">
+                      <p className="finance-value">340</p>
+                      <p className="finance-label-text">Engagement Score</p>
+                    </div>
+                  </div>
+                  <div className="finance-stat-card">
+                    <div className="finance-icon-wrapper">🎯</div>
+                    <div className="finance-details">
+                      <p className="finance-value">89%</p>
+                      <p className="finance-label-text">Quiz Score</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modern-section-card">
+                <div className="section-header-with-action">
+                  <h2 className="modern-section-heading">Enrolled Courses</h2>
+                  <button className="see-all-link">See all</button>
+                </div>
+                <div className="enrolled-courses-grid">
+                  <div className="enrolled-course-card">
+                    <div className="course-icon-display" style={{backgroundColor: '#1a7bd9'}}>
+                      💻
+                    </div>
+                    <h3 className="course-card-title">Object oriented programming</h3>
+                    <button className="course-view-button">View</button>
+                  </div>
+                  <div className="enrolled-course-card">
+                    <div className="course-icon-display" style={{backgroundColor: '#16b0a9'}}>
+                      📊
+                    </div>
+                    <h3 className="course-card-title">Fundamentals of database systems</h3>
+                    <button className="course-view-button">View</button>
+                  </div>
+                </div>
+              </div>
+              </div>
+              <div className="overview-left-col">
+              <div className="modern-section-card">
+                <div className="section-header-with-action">
+                  <h2 className="modern-section-heading">Daily notice</h2>
+                  <button className="see-all-link">See all</button>
+                </div>
+                <div className="daily-notices-list">
+                  <div className="notice-list-item">
+                    <h3 className="notice-item-title">Prelim payment due</h3>
+                    <p className="notice-item-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit.</p>
+                    <button className="notice-see-more-btn">See more</button>
+                  </div>
+                  <div className="notice-list-item">
+                    <h3 className="notice-item-title">Exam schedule</h3>
+                    <p className="notice-item-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit.</p>
+                    <button className="notice-see-more-btn">See more</button>
+                  </div>
+                </div>
+                </div>
+                </div>
+              
+              </div>
+              
+          
+
+         
 
           {/* Enhanced Recommendations Section */}
 <div className="dashboard-section">
@@ -2406,347 +2389,6 @@ function OverviewPage() {
     ))}
   </div>
 </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProfilePage(){
-  const session = readSession();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [profile, setProfile] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState('');
-
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    personal: {
-      fullName: '',
-      dateOfBirth: '',
-      gender: '',
-      AdhaarNumber: '',
-      Category: ''
-    },
-    contact: {
-      email: '',
-      phone: '',
-      address: '',
-      emergencyContact: ''
-    },
-    academic: {
-      program: '',
-      year: '',
-      semester: '',
-      gpa: ''
-    }
-  });
-
-  useEffect(() => {
-    if (!session) navigate('/login');
-  }, [navigate, session]);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setError('');
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/profile/me', {
-          headers: { 'x-auth-token': token }
-        });
-        setProfile(res.data);
-        setForm({
-          name: res.data?.name || '',
-          email: res.data?.email || '',
-          personal: {
-            fullName: res.data?.profile?.personal?.fullName || res.data?.name || '',
-            dateOfBirth: res.data?.profile?.personal?.dateOfBirth || '',
-            gender: res.data?.profile?.personal?.gender || '',
-            AdhaarNumber: res.data?.profile?.personal?.AdhaarNumber || '',
-            Category: res.data?.profile?.personal?.Category || ''
-          },
-          contact: {
-            email: res.data?.profile?.contact?.email || res.data?.email || '',
-            phone: res.data?.profile?.contact?.phone || '',
-            address: res.data?.profile?.contact?.address || '',
-            emergencyContact: res.data?.profile?.contact?.emergencyContact || ''
-          },
-          academic: {
-            program: res.data?.profile?.academic?.program || '',
-            year: res.data?.profile?.academic?.year || '',
-            semester: res.data?.profile?.academic?.semester || '',
-            gpa: res.data?.profile?.academic?.gpa || ''
-          }
-        });
-      } catch (err) {
-        const msg = err.response?.data?.message || 'Failed to load profile';
-        setError(msg);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
-
-  const basicPersonal = profile?.profile?.personal || {};
-  const basicContact = profile?.profile?.contact || {};
-  const academic = profile?.profile?.academic || {};
-
-  const handleBasicChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleNestedChange = (section, field, value) => {
-    setForm(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
-      }
-    }));
-  };
-
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      setSuccess('');
-      setError('');
-      const token = localStorage.getItem('token');
-      const payload = {
-        name: form.name,
-        email: form.email,
-        personal: form.personal,
-        contact: form.contact,
-        academic: form.academic
-      };
-      const res = await axios.put('http://localhost:5000/api/profile', payload, {
-        headers: { 'x-auth-token': token, 'Content-Type': 'application/json' }
-      });
-      setSuccess('Profile updated successfully');
-      if (res.data?.user) {
-        setProfile(res.data.user);
-      }
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to update profile';
-      setError(msg);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="dashboard-layout">
-      {/* Sidebar */}
-      <div className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
-        <div className="sidebar-header">
-          <div className="sidebar-brand">
-            <div className="logo-shield">L</div>
-            <span className="brand-text">Learnlytics</span>
-          </div>
-          <button
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            {sidebarOpen ? "←" : "→"}
-          </button>
-        </div>
-
-        <div className="sidebar-profile">
-          <div className="profile-avatar">
-            {(profile?.name || 'ST')
-              .split(' ')
-              .map(n => n[0])
-              .join('')
-              .toUpperCase()}
-          </div>
-          <div className="profile-info">
-            <h4>{profile?.name || 'Student'}</h4>
-            <p>{academic.program || 'Program'}</p>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <h5>Main</h5>
-            <NavLink to="/overview" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Overview</span>
-            </NavLink>
-            <NavLink to="/risk-status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Risk Status</span>
-            </NavLink>
-            <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Profile</span>
-            </NavLink>
-          </div>
-          <div className="nav-section">
-            <h5>Academic</h5>
-            <NavLink to="/my-instructors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">My Instructors</span>
-            </NavLink>
-            <NavLink to="/schedule" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Schedule</span>
-            </NavLink>
-            <NavLink to="/course-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Course Analysis</span>
-            </NavLink>
-            <NavLink to="/academic-performance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Academic Performance</span>
-            </NavLink>
-          </div>
-          <div className="nav-section">
-            <h5>Tools</h5>
-            <NavLink to="/feedback" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Feedback</span>
-            </NavLink>
-            <NavLink to="/Studentresources" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Resources</span>
-            </NavLink>
-            <NavLink to="/weekly-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-text">Weekly Report</span>
-            </NavLink>
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <button
-            className="logout-btn"
-            onClick={() => {
-              clearSession();
-              navigate("/");
-            }}
-          >
-            <span className="nav-text">Logout</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className={`dashboard-main ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
-        <div className="dashboard-header">
-          <div className="header-left">
-            <button
-              className="mobile-sidebar-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <span className="hamburger">
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
-            </button>
-            <h1>Profile</h1>
-          </div>
-        </div>
-
-        <div className="dashboard-container">
-          <div className="dashboard-section">
-            <div className="profile-card">
-              {loading ? (
-                <p>Loading...</p>
-              ) : (
-                <>
-                  {error && <p className="error">{error}</p>}
-                  {success && <p className="success">{success}</p>}
-
-                  <div className="profile-details-grid">
-                    <div className="detail-group">
-                      <h3>Basic Details</h3>
-                      <div className="form-grid">
-                        <label className="form-field">
-                          <span className="label">Name</span>
-                          <input className="input" name="name" value={form.name} onChange={handleBasicChange} placeholder="Enter name" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Email</span>
-                          <input className="input" name="email" value={form.email} onChange={handleBasicChange} placeholder="Enter email" />
-                        </label>
-                        <div className="detail readonly"><span>Role</span><strong>{profile?.role || '-'}</strong></div>
-                      </div>
-                    </div>
-
-                    <div className="detail-group">
-                      <h3>Personal</h3>
-                      <div className="form-grid">
-                        <label className="form-field">
-                          <span className="label">Full Name</span>
-                          <input className="input" value={form.personal.fullName} onChange={(e)=>handleNestedChange('personal','fullName', e.target.value)} placeholder="Full name" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Date of Birth</span>
-                          <input className="input" value={form.personal.dateOfBirth} onChange={(e)=>handleNestedChange('personal','dateOfBirth', e.target.value)} placeholder="YYYY-MM-DD" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Gender</span>
-                          <input className="input" value={form.personal.gender} onChange={(e)=>handleNestedChange('personal','gender', e.target.value)} placeholder="Gender" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Category</span>
-                          <input className="input" value={form.personal.Category} onChange={(e)=>handleNestedChange('personal','Category', e.target.value)} placeholder="Category" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Adhaar Number</span>
-                          <input className="input" value={form.personal.AdhaarNumber} onChange={(e)=>handleNestedChange('personal','AdhaarNumber', e.target.value)} placeholder="Adhaar" />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="detail-group">
-                      <h3>Contact</h3>
-                      <div className="form-grid">
-                        <label className="form-field">
-                          <span className="label">Email</span>
-                          <input className="input" value={form.contact.email} onChange={(e)=>handleNestedChange('contact','email', e.target.value)} placeholder="Email" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Phone</span>
-                          <input className="input" value={form.contact.phone} onChange={(e)=>handleNestedChange('contact','phone', e.target.value)} placeholder="Phone" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Address</span>
-                          <input className="input" value={form.contact.address} onChange={(e)=>handleNestedChange('contact','address', e.target.value)} placeholder="Address" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Emergency Contact</span>
-                          <input className="input" value={form.contact.emergencyContact} onChange={(e)=>handleNestedChange('contact','emergencyContact', e.target.value)} placeholder="Emergency Contact" />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="detail-group">
-                      <h3>Academic</h3>
-                      <div className="form-grid">
-                        <label className="form-field">
-                          <span className="label">Program</span>
-                          <input className="input" value={form.academic.program} onChange={(e)=>handleNestedChange('academic','program', e.target.value)} placeholder="Program" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Year</span>
-                          <input className="input" value={form.academic.year} onChange={(e)=>handleNestedChange('academic','year', e.target.value)} placeholder="Year" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">Semester</span>
-                          <input className="input" value={form.academic.semester} onChange={(e)=>handleNestedChange('academic','semester', e.target.value)} placeholder="Semester" />
-                        </label>
-                        <label className="form-field">
-                          <span className="label">GPA</span>
-                          <input className="input" value={form.academic.gpa} onChange={(e)=>handleNestedChange('academic','gpa', e.target.value)} placeholder="GPA" />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="form-actions">
-                    <button className="btn" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -4832,7 +4474,7 @@ function StudentDashboard(){
   const studentData = {
     name: session?.name || 'John Doe',
     course: 'Computer Science',
-    year: '2024',
+    year: '3rd year',
     semester: 'Spring',
     photo: '👨‍🎓',
     attendance: 87,
@@ -4840,6 +4482,44 @@ function StudentDashboard(){
     totalStudyHours: 142,
     engagementScore: 82,
     riskLevel: 'Low',
+    finance: {
+      totalPayable: 10000,
+      totalPaid: 5000,
+      others: 300
+    },
+    enrolledCourses: [
+      { 
+        id: 1, 
+        title: 'Object oriented programming', 
+        progress: 65,
+        color: '#9b87f5'
+      },
+      { 
+        id: 2, 
+        title: 'Fundamentals of database systems', 
+        progress: 45,
+        color: '#9b87f5'
+      }
+    ],
+    instructors: [
+      { id: 1, name: 'Dr. Sarah Johnson', photo: 'https://i.pravatar.cc/150?img=1' },
+      { id: 2, name: 'Prof. Michael Chen', photo: 'https://i.pravatar.cc/150?img=2' },
+      { id: 3, name: 'Dr. Emily Davis', photo: 'https://i.pravatar.cc/150?img=3' }
+    ],
+    notices: [
+      {
+        id: 1,
+        title: 'Prelim payment due',
+        description: 'Sorem ipsum dolor sit amet, consectetur adipiscing elit.',
+        link: 'See more'
+      },
+      {
+        id: 2,
+        title: 'Exam schedule',
+        description: 'Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+        link: 'See more'
+      }
+    ],
     engagementTrend: [
       { week: 'Week 1', score: 75 },
       { week: 'Week 2', score: 78 },
