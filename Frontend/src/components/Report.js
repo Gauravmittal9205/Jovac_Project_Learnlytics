@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import './App.css';
+
 import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as Router, NavLink, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+// import { AuthProvider, useAuth } from './context/AuthContext';
 import {
   RadialBarChart,
   RadialBar,
@@ -27,7 +27,51 @@ import {
   PolarRadiusAxis,
   Radar
 } from "recharts";
-function WeeklyReport(){
+const SESSION_KEY = 'learnlytics_session';
+const API_URL = 'http://localhost:5000/api/auth';
+
+function readSession(){
+  try { 
+    const raw = localStorage.getItem(SESSION_KEY); 
+    return raw ? JSON.parse(raw) : null; 
+  } catch { 
+    return null; 
+  }
+}
+
+function clearSession(){ 
+  localStorage.removeItem(SESSION_KEY); 
+}
+const engagementData = [
+    { week: 'Week 1', score: 75 },
+    { week: 'Week 2', score: 78 },
+    { week: 'Week 3', score: 82 },
+    { week: 'Week 4', score: 85 },
+    { week: 'Week 5', score: 80 },
+    { week: 'Week 6', score: 88 },
+    { week: 'Week 7', score: 82 },
+  ];
+
+  const currentScore = engagementData[engagementData.length - 1].score;
+  const peakScore = Math.max(...engagementData.map(point => point.score));
+  const trend = currentScore > engagementData[0].score ? 'Improving' : 'Stable';
+  const weeklyData = {
+  performanceData: [
+    { score: 95, status: 'excellent' },
+    { score: 88, status: 'excellent' },
+    { score: 65, status: 'needs-improvement' },
+    { score: 78, status: 'excellent' },
+    { score: 84, status: 'excellent' }
+  ]
+};
+const totalCourses = weeklyData.performanceData.length;
+  const averageScore = Math.round(weeklyData.performanceData.reduce((acc, course) => acc + course.score, 0) / totalCourses);
+  const excellentCourses = weeklyData.performanceData.filter(course => course.status === 'excellent').length;
+  const needsAttentionCourses = weeklyData.performanceData.filter(course => course.status === 'needs-improvement').length;
+
+
+
+function Report(){
   const session = readSession();
   const navigate = useNavigate();
   const [showReportModal, setShowReportModal] = useState(false);
@@ -997,3 +1041,4 @@ function WeeklyReport(){
     </div>
   );
 }
+export default Report;
