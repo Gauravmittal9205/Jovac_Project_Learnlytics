@@ -10,7 +10,7 @@ const profileRoutes = require('./routes/api/profile');
 
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 // Configure CORS with credentials support
 const corsOptions = {
