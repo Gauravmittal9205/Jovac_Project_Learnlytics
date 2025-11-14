@@ -1,10 +1,8 @@
-
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import './App.css';
 import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as Router, NavLink, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NavIcons from './NavIcons';
-// import Profile from './components/Profile';
 import Help from './Help';
 import About from './About';
 import Resources from './Resources';
