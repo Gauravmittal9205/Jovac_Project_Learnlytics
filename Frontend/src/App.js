@@ -2597,6 +2597,85 @@ function AcademicPerformancePage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const studentId = session?._id || session?.id || session?.userId || session?.user?._id || 'demo-student';
   const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+  
+  // Light theme styles
+  const styles = {
+    container: {
+      padding: '2rem',
+      backgroundColor: '#f8fafc',
+      minHeight: '100vh',
+    },
+    header: {
+      marginBottom: '2rem',
+      color: '#1e293b',
+    },
+    card: {
+      backgroundColor: 'white',
+      borderRadius: '0.75rem',
+      padding: '1.5rem',
+      marginBottom: '1.5rem',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        transform: 'translateY(-2px)',
+      },
+    },
+    formGroup: {
+      marginBottom: '1.25rem',
+    },
+    label: {
+      display: 'block',
+      marginBottom: '0.5rem',
+      color: '#475569',
+      fontWeight: '500',
+    },
+    input: {
+      width: '100%',
+      padding: '0.625rem 0.875rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #e2e8f0',
+      backgroundColor: '#f8fafc',
+      color: '#1e293b',
+      fontSize: '0.875rem',
+      transition: 'border-color 0.2s, box-shadow 0.2s',
+      '&:focus': {
+        outline: 'none',
+        borderColor: '#93c5fd',
+        boxShadow: '0 0 0 3px rgba(147, 197, 253, 0.5)',
+      },
+    },
+    button: {
+      backgroundColor: '#3b82f6',
+      color: 'white',
+      padding: '0.625rem 1.25rem',
+      borderRadius: '0.5rem',
+      border: 'none',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'background-color 0.2s, transform 0.1s',
+      '&:hover': {
+        backgroundColor: '#2563eb',
+      },
+      '&:active': {
+        transform: 'scale(0.98)',
+      },
+    },
+    sectionTitle: {
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      color: '#1e293b',
+      marginBottom: '1.25rem',
+      paddingBottom: '0.5rem',
+      borderBottom: '2px solid #e2e8f0',
+    },
+    grid: {
+      display: 'grid',
+      gap: '1.5rem',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+      marginBottom: '2rem',
+    },
+  };
 
   const [summary, setSummary] = useState(emptySummary);
   const [summaryForm, setSummaryForm] = useState(emptySummary);
@@ -3039,301 +3118,309 @@ function AcademicPerformancePage() {
           </div>
         </div>
 
-        <div className="dashboard-container academic-performance-container">
+        <div className="academic-performance-container">
           {error && <div className="inline-alert warning">{error}</div>}
           {loading && !error && <div className="inline-alert info">Crunching latest predictions...</div>}
 
-          <div className="dashboard-section data-entry-panel">
+          <div className="data-entry-panel">
             <div className="section-header">
-              <div>
-                <h2 className="section-title">Data Entry & Overrides</h2>
-                <p className="section-description">Provide your latest numbers to instantly rebuild forecasts, charts, and alerts.</p>
-              </div>
+              <h2 className="section-title">Academic Performance Dashboard</h2>
+              <p className="section-description">Track and manage your academic progress with real-time insights and analytics</p>
             </div>
             <div className="data-entry-grid">
+              {/* Academic Summary - Full Width */}
               <form className="data-form" onSubmit={handleSummarySubmit}>
                 <h3>Academic Summary</h3>
                 <div className="form-grid">
-                  <label>
-                    Current GPA
+                  <div className="form-group">
+                    <label>Current GPA</label>
                     <input
                       type="number"
                       step="0.01"
+                      className="form-control"
                       value={summaryForm.gpa}
                       onChange={(e) => handleSummaryFormChange('gpa', e.target.value)}
                       placeholder="e.g. 3.6"
                     />
-                  </label>
-                  <label>
-                    Predicted GPA
+                  </div>
+                  <div className="form-group">
+                    <label>Predicted GPA</label>
                     <input
                       type="number"
                       step="0.01"
+                      className="form-control"
                       value={summaryForm.predictedGPA}
                       onChange={(e) => handleSummaryFormChange('predictedGPA', e.target.value)}
                       placeholder="e.g. 3.8"
                     />
-                  </label>
-                  <label>
-                    Attendance Rate %
+                  </div>
+                  <div className="form-group">
+                    <label>Attendance %</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      className="form-control"
                       value={summaryForm.attendanceRate}
                       onChange={(e) => handleSummaryFormChange('attendanceRate', e.target.value)}
                       placeholder="95"
                     />
-                  </label>
-                  <label>
-                    Current Grade
+                  </div>
+                  <div className="form-group">
+                    <label>Current Grade</label>
                     <input
                       type="text"
+                      className="form-control"
                       value={summaryForm.currentGrade}
                       onChange={(e) => handleSummaryFormChange('currentGrade', e.target.value)}
                       placeholder="B+"
                     />
-                  </label>
-                  <label>
-                    Risk Level
-                    <select value={summaryForm.riskLevel} onChange={(e) => handleSummaryFormChange('riskLevel', e.target.value)}>
-                      <option value="">Select risk</option>
+                  </div>
+                  <div className="form-group">
+                    <label>Risk Level</label>
+                    <select 
+                      className="form-control"
+                      value={summaryForm.riskLevel} 
+                      onChange={(e) => handleSummaryFormChange('riskLevel', e.target.value)}
+                    >
+                      <option value="">Select risk level</option>
                       <option value="Low">Low</option>
                       <option value="Moderate">Moderate</option>
                       <option value="High">High</option>
                     </select>
-                  </label>
-                  <label>
-                    Attendance Drop %
+                  </div>
+                  <div className="form-group">
+                    <label>Attendance Drop %</label>
                     <input
                       type="number"
                       step="0.1"
+                      className="form-control"
                       value={summaryForm.projectedAttendanceDrop}
                       onChange={(e) => handleSummaryFormChange('projectedAttendanceDrop', e.target.value)}
                       placeholder="2"
                     />
-                  </label>
-                  <label>
-                    Pass Probability %
+                  </div>
+                  <div className="form-group">
+                    <label>Pass Probability %</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      className="form-control"
                       value={summaryForm.passProbability}
                       onChange={(e) => handleSummaryFormChange('passProbability', e.target.value)}
                       placeholder="90"
                     />
-                  </label>
-                  <label>
-                    Prediction Confidence %
+                  </div>
+                  <div className="form-group">
+                    <label>Confidence %</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      className="form-control"
                       value={summaryForm.predictionConfidence}
                       onChange={(e) => handleSummaryFormChange('predictionConfidence', e.target.value)}
                       placeholder="85"
                     />
-                  </label>
+                  </div>
                 </div>
-                <button type="submit" className="btn primary-btn">Save Summary</button>
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">
+                    Update Summary
+                  </button>
+                </div>
               </form>
+              
+              {/* Other Forms - Two Column Layout */}
+              <div className="forms-container">
 
               <form className="data-form" onSubmit={handleWeeklyEntrySubmit}>
                 <h3>Add Weekly Score</h3>
                 <div className="form-grid">
-                  <label>
-                    Week Label
+                  <div className="form-group">
+                    <label>Week Label</label>
                     <input
                       type="text"
+                      className="form-control"
                       value={weeklyEntry.week}
                       onChange={(e) => handleWeeklyEntryChange('week', e.target.value)}
                       placeholder="Week 1"
                     />
-                  </label>
-                  <label>
-                    Score %
+                  </div>
+                  <div className="form-group">
+                    <label>Score %</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      className="form-control"
                       value={weeklyEntry.score}
                       onChange={(e) => handleWeeklyEntryChange('score', e.target.value)}
                       placeholder="88"
                     />
-                  </label>
+                  </div>
                 </div>
-                <button type="submit" className="btn primary-btn">Add Week</button>
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">
+                    <span>Add Week</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
               </form>
 
               <form className="data-form" onSubmit={handleSubjectEntrySubmit}>
                 <h3>Subject Average</h3>
                 <div className="form-grid">
-                  <label>
-                    Subject
+                  <div className="form-group">
+                    <label>Subject</label>
                     <input
                       type="text"
+                      className="form-control"
                       value={subjectEntry.subject}
                       onChange={(e) => handleSubjectEntryChange('subject', e.target.value)}
-                      placeholder="Math"
+                      placeholder="Mathematics"
                     />
-                  </label>
-                  <label>
-                    Score %
+                  </div>
+                  <div className="form-group">
+                    <label>Score %</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      className="form-control"
                       value={subjectEntry.score}
                       onChange={(e) => handleSubjectEntryChange('score', e.target.value)}
                       placeholder="92"
                     />
-                  </label>
+                  </div>
                 </div>
-                <button type="submit" className="btn primary-btn">Add Subject</button>
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">
+                    <span>Add Subject</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                </div>
               </form>
 
               <form className="data-form" onSubmit={handleAssessmentEntrySubmit}>
                 <h3>Assessment Type</h3>
                 <div className="form-grid">
-                  <label>
-                    Assessment Name
+                  <div className="form-group">
+                    <label>Assessment Name</label>
                     <input
                       type="text"
+                      className="form-control"
                       value={assessmentEntry.name}
                       onChange={(e) => handleAssessmentEntryChange('name', e.target.value)}
-                      placeholder="Quizzes"
+                      placeholder="Quizzes, Midterm, etc."
                     />
-                  </label>
-                  <label>
-                    Score %
+                  </div>
+                  <div className="form-group">
+                    <label>Score %</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      className="form-control"
                       value={assessmentEntry.score}
                       onChange={(e) => handleAssessmentEntryChange('score', e.target.value)}
                       placeholder="85"
                     />
-                  </label>
+                  </div>
                 </div>
-                <button type="submit" className="btn primary-btn">Add Assessment</button>
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">
+                    <span>Add Assessment</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                </div>
               </form>
 
               <form className="data-form" onSubmit={handleWeakTopicSubmit}>
                 <h3>Weak Topic</h3>
                 <div className="form-grid">
-                  <label>
-                    Subject
+                  <div className="form-group">
+                    <label>Subject</label>
                     <input
                       type="text"
+                      className="form-control"
                       value={weakTopicEntry.subject}
                       onChange={(e) => handleWeakTopicChange('subject', e.target.value)}
-                      placeholder="Physics"
+                      placeholder="e.g., Physics, Mathematics"
                     />
-                  </label>
-                  <label>
-                    Chapters (comma separated)
+                  </div>
+                  <div className="form-group">
+                    <label>Chapters (comma separated)</label>
                     <input
                       type="text"
+                      className="form-control"
                       value={weakTopicEntry.topics}
                       onChange={(e) => handleWeakTopicChange('topics', e.target.value)}
-                      placeholder="Optics, Magnetism"
+                      placeholder="Optics, Magnetism, Calculus"
                     />
-                  </label>
-                  <label>
-                    Avg Score %
+                  </div>
+                  <div className="form-group">
+                    <label>Average Score %</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      className="form-control"
                       value={weakTopicEntry.averageScore}
                       onChange={(e) => handleWeakTopicChange('averageScore', e.target.value)}
                       placeholder="60"
                     />
-                  </label>
+                  </div>
                 </div>
-                <button type="submit" className="btn primary-btn">Add Weak Topic</button>
-              </form>
-
-              <form className="data-form" onSubmit={handleAssignmentEntrySubmit}>
-                <h3>Assignment Progress</h3>
-                <div className="form-grid">
-                  <label>
-                    Subject
-                    <input
-                      type="text"
-                      value={assignmentEntry.subject}
-                      onChange={(e) => handleAssignmentEntryChange('subject', e.target.value)}
-                      placeholder="Chemistry"
-                    />
-                  </label>
-                  <label>
-                    Completed
-                    <input
-                      type="number"
-                      min="0"
-                      value={assignmentEntry.completed}
-                      onChange={(e) => handleAssignmentEntryChange('completed', e.target.value)}
-                      placeholder="7"
-                    />
-                  </label>
-                  <label>
-                    Total
-                    <input
-                      type="number"
-                      min="0"
-                      value={assignmentEntry.total}
-                      onChange={(e) => handleAssignmentEntryChange('total', e.target.value)}
-                      placeholder="10"
-                    />
-                  </label>
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">
+                    <span>Add Weak Topic</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
                 </div>
-                <button type="submit" className="btn primary-btn">Add Tracker</button>
               </form>
+            </div> {/* End of forms-container */}
 
-              <form className="data-form" onSubmit={handleStudyPlanSubmit}>
+              <form className="data-form study-plan-form" onSubmit={handleStudyPlanSubmit}>
                 <h3>Study Plan</h3>
                 <div className="form-grid">
-                  <label>
-                    Hours this week
+                  <div className="form-group">
+                    <label>Hours this week</label>
                     <input
                       type="number"
                       min="0"
+                      className="form-control"
                       value={studyPlanForm.recommendedHours}
                       onChange={(e) => handleStudyPlanFormChange('recommendedHours', e.target.value)}
                       placeholder="10"
                     />
-                  </label>
-                  <label>
-                    Focus subjects
+                  </div>
+                  <div className="form-group">
+                    <label>Focus subjects</label>
                     <input
                       type="text"
+                      className="form-control"
                       value={studyPlanForm.focusSubjects}
                       onChange={(e) => handleStudyPlanFormChange('focusSubjects', e.target.value)}
                       placeholder="Math, Physics"
                     />
-                  </label>
-                  <label>
-                    Chapters
-                    <input
-                      type="text"
-                      value={studyPlanForm.chapters}
-                      onChange={(e) => handleStudyPlanFormChange('chapters', e.target.value)}
-                      placeholder="Integration, Magnetism"
-                    />
-                  </label>
-                  <label>
-                    Video IDs
-                    <input
-                      type="text"
-                      value={studyPlanForm.videos}
-                      onChange={(e) => handleStudyPlanFormChange('videos', e.target.value)}
-                      placeholder="v1, v2"
-                    />
-                  </label>
+                  </div>
                 </div>
-                <button type="submit" className="btn primary-btn">Save Plan</button>
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">
+                    <span>Save Study Plan</span>
+                  </button>
+                </div>
               </form>
 
               <form className="data-form" onSubmit={handlePeerRankSubmit}>

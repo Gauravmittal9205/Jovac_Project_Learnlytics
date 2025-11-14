@@ -944,6 +944,340 @@ border-bottom:1px solid #e6e8eb}
 .pill-row{ display:flex; flex-wrap: wrap; gap:10px }
 .pill{ min-width:auto; background:#eef2ff; border:1px solid #e6e8eb; border-radius:999px; padding:10px 14px; font-weight:600; color:#0f172a }
 
+/* Academic Performance Page - Modern Design */
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --secondary: #f1f5f9;
+  --secondary-hover: #e2e8f0;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --surface: #ffffff;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --transition: all 0.2s ease-in-out;
+}
+
+.academic-performance-container {
+  padding: 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.data-entry-panel {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 2.5rem;
+  margin-bottom: 2.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  border: 1px solid var(--border);
+}
+
+.data-entry-panel:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.section-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section-title {
+  font-size: 2rem;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  background: linear-gradient(90deg, var(--primary), #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.section-description {
+  color: var(--text-light);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.data-entry-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.forms-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .forms-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.data-form {
+  background: var(--surface);
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.data-form:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.data-form h3 {
+  font-size: 1.25rem;
+  color: var(--text);
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.data-form h3::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 1.25rem;
+  background: var(--primary);
+  border-radius: 3px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.875rem;
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 0.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--text);
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: #f8fafc;
+  color: var(--text);
+  font-size: 0.875rem;
+  transition: var(--transition);
+  line-height: 1.4;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  background-color: white;
+}
+
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem;
+}
+
+.form-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  line-height: 1.4;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 1px 2px 0 rgba(79, 70, 229, 0.1);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-hover);
+  transform: translateY(-1px);
+}
+
+.inline-alert {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+  font-size: 0.9375rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  line-height: 1.5;
+}
+
+.inline-alert.warning {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-left: 4px solid var(--warning);
+}
+
+.inline-alert.info {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border-left: 4px solid var(--primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .data-entry-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* First form (Academic Summary) */
+  .data-form:first-child {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Form grid inside the first form */
+  .data-form:first-child .form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    width: 100%;
+  }
+
+  /* Make form groups take full width */
+  .data-form:first-child .form-group {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  /* Submit button styling */
+  .data-form:first-child .form-actions {
+    grid-column: 1 / -1;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 768px) {
+  .academic-performance-container {
+    padding: 1rem;
+  }
+  
+  .data-form:first-child .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .section-description {
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .data-form {
+    padding: 1rem;
+  }
+  
+  .data-form:first-child .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.data-form {
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+/* Add staggered animation for form items */
+.data-form:nth-child(1) { animation-delay: 0.1s; }
+.data-form:nth-child(2) { animation-delay: 0.15s; }
+.data-form:nth-child(3) { animation-delay: 0.2s; }
+.data-form:nth-child(4) { animation-delay: 0.25s; }
+.data-form:nth-child(5) { animation-delay: 0.3s; }
+.data-form:nth-child(6) { animation-delay: 0.35s; }
+
 /* Dashboard Container */
 .dashboard-container{
   flex: 1;
