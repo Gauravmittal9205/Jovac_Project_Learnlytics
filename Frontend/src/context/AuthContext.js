@@ -11,52 +11,34 @@ export const AuthProvider = ({ children }) => {
   // Check if user is logged in on initial load
   useEffect(() => {
     const checkAuth = async () => {
-      console.log('--- Starting auth check ---');
       const token = localStorage.getItem('token');
-      console.log('Auth check - Token exists:', !!token);
-      
+
       if (!token) {
-        console.log('No auth token found, user is not logged in');
         setLoading(false);
         return;
       }
 
       try {
-        console.log('Making auth check request to server...');
         const response = await axios.get('http://localhost:5000/api/auth/me', {
           headers: { 
             'x-auth-token': token,
             'Content-Type': 'application/json'
-          },
-          withCredentials: true
+          }
         });
-        
-        console.log('Auth check successful, user data:', response.data);
-        if (response.data && response.data.data) {
-          console.log('Setting user in context:', response.data.data);
-          setUser(response.data.data);
+
+        // Backend returns { user: { ... } }
+        if (response.data && response.data.user) {
+          setUser(response.data.user);
         } else {
-          console.warn('Unexpected response format:', response.data);
           localStorage.removeItem('token');
           setUser(null);
         }
       } catch (err) {
-        console.error('Auth check failed:', {
-          message: err.message,
-          response: err.response?.data,
-          status: err.response?.status,
-          config: {
-            url: err.config?.url,
-            method: err.config?.method,
-            headers: err.config?.headers
-          }
-        });
+        // Token invalid or expired
         localStorage.removeItem('token');
         setUser(null);
       } finally {
-        console.log('Auth state - loading set to false');
         setLoading(false);
-        console.log('--- Auth check complete ---');
       }
     };
 
@@ -64,28 +46,30 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (email, password) => {
+  const login = async (email, password, role) => {
     try {
       setError('');
-      console.log('Starting login for:', email);
       const response = await axios.post('http://localhost:5000/api/auth/login', {
         email,
-        password
+        password,
+        role,
       }, {
         headers: {
           'Content-Type': 'application/json'
-        },
-        withCredentials: true
+        }
       });
-      
-      console.log('Login response:', response.data);
 
-      const { token, user } = response.data.data;
+      // Backend returns { message, token, user }
+      const { token, user } = response.data;
+      if (!token || !user) {
+        throw new Error('Invalid login response from server');
+      }
+
       localStorage.setItem('token', token);
       setUser(user);
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
+      const message = err.response?.data?.message || err.message || 'Login failed';
       setError(message);
       return { success: false, error: message };
     }
@@ -101,15 +85,23 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setError('');
-      console.log('Registering user:', userData);
-      const response = await axios.post('http://localhost:5001/api/auth/register', userData);
-      
-      const { token, user } = response.data.data;
+      const response = await axios.post('http://localhost:5000/api/auth/register', userData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Backend returns { message, token, user }
+      const { token, user } = response.data;
+      if (!token || !user) {
+        throw new Error('Invalid registration response from server');
+      }
+
       localStorage.setItem('token', token);
       setUser(user);
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed';
+      const message = err.response?.data?.message || err.message || 'Registration failed';
       setError(message);
       return { success: false, error: message };
     }

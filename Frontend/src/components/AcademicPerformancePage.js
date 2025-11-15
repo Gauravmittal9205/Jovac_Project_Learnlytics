@@ -81,7 +81,7 @@ function AcademicPerformancePage() {
       backgroundColor: 'white',
       borderRadius: '0.75rem',
       padding: '1.5rem',
-      marginBottom: '1.5rem',
+      marginBottom: '1.25rem',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
       transition: 'all 0.2s ease-in-out',
       '&:hover': {
@@ -139,8 +139,9 @@ function AcademicPerformancePage() {
     },
     grid: {
       display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
       gap: '1.5rem',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+      alignItems: 'stretch',
       marginBottom: '2rem',
     },
   };
