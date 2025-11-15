@@ -8,6 +8,7 @@ const path = require('path');
 const authRoutes = require('./routes/api/auth');
 const profileRoutes = require('./routes/api/profile');
 const feedbackRoutes = require('./routes/feedback');
+const academicRoutes = require('./routes/api/academicRoutes');
 
 
 const app = express();
@@ -41,6 +42,7 @@ mongoose.connect(DB_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/academic', academicRoutes);
 
 
 // Serve static assets in production

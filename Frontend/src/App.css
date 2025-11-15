@@ -1211,15 +1211,8 @@ select.form-control {
   /* Form grid inside the first form */
   .data-form:first-child .form-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr; /* Make Academic Summary vertical */
     gap: 1rem;
-    width: 100%;
-  }
-
-  /* Make form groups take full width */
-  .data-form:first-child .form-group {
-    width: 100%;
-    margin-bottom: 0;
   }
 
   /* Submit button styling */
@@ -1660,6 +1653,28 @@ select.form-control {
   display:flex;
   flex-direction:column;
   gap:32px;
+}
+
+/* Ensure the internal two-column forms block spans the full width of the outer grid
+   so it doesn't collide with sibling cards like the Study Plan form */
+.forms-container {
+  grid-column: 1 / -1;
+}
+
+/* Prevent card hover elevation from visually covering neighboring cards */
+.data-form {
+  position: relative;
+  z-index: 0;
+}
+.data-form:hover {
+  z-index: 1;
+}
+
+/* Reinforce responsive behavior after later overrides so small screens stack items */
+@media (max-width: 1024px) {
+  .data-entry-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .inline-alert{
