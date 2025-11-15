@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as Router, NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, NavLink } from 'react-router-dom';
+import { FaStar, FaSmile, FaFrown, FaMeh, FaPaperPlane, FaCamera, FaCheckCircle, FaTimes } from 'react-icons/fa';
 
 const SESSION_KEY = 'learnlytics_session';
 const API_URL = 'http://localhost:5000/api/auth';
@@ -16,24 +17,84 @@ function readSession(){
 function clearSession(){ 
   localStorage.removeItem(SESSION_KEY); 
 }
-function FeedbackPage(){
+
+function FeedbackPage() {
   const session = readSession();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('general');
+  const [submitted, setSubmitted] = useState(false);
   const [feedback, setFeedback] = useState({
-    lessonClarity: 4,
-    quizDifficulty: 3,
-    satisfaction: true
+    rating: 0,
+    feedbackType: 'suggestion',
+    message: '',
+    email: session?.email || '',
+    screenshot: null,
+    satisfaction: 3,
+    difficulty: 3,
+    wouldRecommend: null,
+    courseComments: ''
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  useEffect(() => { if (!session) navigate('/login'); }, [navigate, session]);
+  useEffect(() => { 
+    if (!session) navigate('/login'); 
+  }, [navigate, session]);
 
-  const handleFeedbackChange = (field, value) => {
+  const handleChange = (field, value) => {
     setFeedback(prev => ({ ...prev, [field]: value }));
   };
 
-  const submitFeedback = () => {
-    alert('Thank you for your feedback! It helps us improve your learning experience.');
+  const handleScreenshot = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFeedback(prev => ({ ...prev, screenshot: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeScreenshot = () => {
+    setFeedback(prev => ({ ...prev, screenshot: null }));
+  };
+
+  const resetForm = () => {
+    setFeedback({
+      rating: 0,
+      feedbackType: 'suggestion',
+      message: '',
+      email: session?.email || '',
+      screenshot: null,
+      satisfaction: 3,
+      difficulty: 3,
+      wouldRecommend: null,
+      courseComments: ''
+    });
+  };
+
+  const submitFeedback = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${API_URL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.token}`
+        },
+        body: JSON.stringify({
+          ...feedback,
+          userId: session?.userId
+        })
+      });
+      
+      if (response.ok) {
+        setSubmitted(true);
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+    }
   };
 
   return (
@@ -134,111 +195,221 @@ function FeedbackPage(){
                 <span></span>
               </span>
             </button>
-            <h1>Feedback</h1>
+            <h1>Share Your Feedback</h1>
           </div>
         </div>
 
         <div className="dashboard-container">
-          <div className="dashboard-section">
-            <h2 className="section-title">Provide Your Feedback</h2>
-            <p className="section-description">
-              Your feedback helps us improve the learning experience. Please take a moment to share your thoughts.
-            </p>
-            
-            <div className="feedback-card">
-              <div className="feedback-item">
-                <label>Lesson Clarity</label>
-                <p className="feedback-description">How clear and understandable were the lessons?</p>
-                <div className="star-rating">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button
-                      key={star}
-                      className={`star ${star <= feedback.lessonClarity ? 'active' : ''}`}
-                      onClick={() => handleFeedbackChange('lessonClarity', star)}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
-                <div className="rating-label">
-                  {feedback.lessonClarity === 1 && 'Very Unclear'}
-                  {feedback.lessonClarity === 2 && 'Unclear'}
-                  {feedback.lessonClarity === 3 && 'Neutral'}
-                  {feedback.lessonClarity === 4 && 'Clear'}
-                  {feedback.lessonClarity === 5 && 'Very Clear'}
-                </div>
-              </div>
-              
-              <div className="feedback-item">
-                <label>Quiz Difficulty</label>
-                <p className="feedback-description">How would you rate the difficulty level of the quizzes?</p>
-                <div className="difficulty-slider">
-                  <span>Too Easy</span>
-                  <input
-                    type="range"
-                    min="1"
-                    max="5"
-                    value={feedback.quizDifficulty}
-                    onChange={(e) => handleFeedbackChange('quizDifficulty', parseInt(e.target.value))}
-                    className="slider"
-                  />
-                  <span>Too Hard</span>
-                  <div className="slider-value">{feedback.quizDifficulty}/5</div>
-                </div>
-                <div className="rating-label">
-                  {feedback.quizDifficulty === 1 && 'Too Easy'}
-                  {feedback.quizDifficulty === 2 && 'Easy'}
-                  {feedback.quizDifficulty === 3 && 'Just Right'}
-                  {feedback.quizDifficulty === 4 && 'Hard'}
-                  {feedback.quizDifficulty === 5 && 'Too Hard'}
-                </div>
-              </div>
-              
-              <div className="feedback-item">
-                <label>Overall Satisfaction</label>
-                <p className="feedback-description">How satisfied are you with your learning experience?</p>
-                <div className="satisfaction-buttons">
-                  <button
-                    className={`satisfaction-btn ${feedback.satisfaction ? 'active' : ''}`}
-                    onClick={() => handleFeedbackChange('satisfaction', true)}
-                  >
-                    Satisfied
-                  </button>
-                  <button
-                    className={`satisfaction-btn ${!feedback.satisfaction ? 'active' : ''}`}
-                    onClick={() => handleFeedbackChange('satisfaction', false)}
-                  >
-                    Not Satisfied
-                  </button>
-                </div>
+          {submitted ? (
+            <div className="feedback-success">
+              <FaCheckCircle className="success-icon" />
+              <h2>Thank You for Your Feedback!</h2>
+              <p>We appreciate you taking the time to help us improve your learning experience.</p>
+              <button 
+                onClick={() => setSubmitted(false)} 
+                className="btn-primary"
+              >
+                Submit Another Feedback
+              </button>
+            </div>
+          ) : (
+            <div className="feedback-container">
+              <div className="feedback-tabs">
+                <button 
+                  className={`tab-btn ${activeTab === 'general' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('general')}
+                >
+                  General Feedback
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'course' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('course')}
+                >
+                  Course Feedback
+                </button>
               </div>
 
-              <div className="feedback-item">
-                <label>Additional Comments</label>
-                <p className="feedback-description">Any additional feedback or suggestions?</p>
-                <textarea 
-                  className="feedback-textarea"
-                  placeholder="Share your thoughts, suggestions, or concerns..."
-                  rows="4"
-                />
-              </div>
-              
-              <div className="feedback-actions">
-                <button className="btn primary" onClick={submitFeedback}>
-                  Submit Feedback
-                </button>
-                <button className="btn ghost" onClick={() => {
-                  setFeedback({
-                    lessonClarity: 4,
-                    quizDifficulty: 3,
-                    satisfaction: true
-                  });
-                }}>
-                  Reset
-                </button>
-              </div>
+              <form onSubmit={submitFeedback} className="feedback-form">
+                {activeTab === 'general' ? (
+                  <>
+                    <div className="feedback-section">
+                      <h3>How would you rate your experience?</h3>
+                      <div className="emoji-rating">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            className={`emoji-btn ${feedback.rating === star ? 'active' : ''}`}
+                            onClick={() => handleChange('rating', star)}
+                            aria-label={`Rate ${star} star`}
+                          >
+                            {star <= 2 ? (
+                              <FaFrown className="emoji" />
+                            ) : star <= 4 ? (
+                              <FaMeh className="emoji" />
+                            ) : (
+                              <FaSmile className="emoji" />
+                            )}
+                            <span className="star">
+                              <FaStar className={feedback.rating >= star ? 'filled' : ''} />
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="rating-labels">
+                        <span>Poor</span>
+                        <span>Fair</span>
+                        <span>Good</span>
+                        <span>Very Good</span>
+                        <span>Excellent</span>
+                      </div>
+                    </div>
+
+                    <div className="feedback-section">
+                      <h3>What type of feedback are you providing?</h3>
+                      <div className="feedback-type">
+                        {['suggestion', 'bug', 'compliment', 'question'].map((type) => (
+                          <label key={type} className="radio-label">
+                            <input
+                              type="radio"
+                              name="feedbackType"
+                              checked={feedback.feedbackType === type}
+                              onChange={() => handleChange('feedbackType', type)}
+                            />
+                            <span className="radio-custom"></span>
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="feedback-section">
+                      <h3>Your Feedback</h3>
+                      <textarea
+                        placeholder="Share your thoughts, suggestions, or report issues..."
+                        value={feedback.message}
+                        onChange={(e) => handleChange('message', e.target.value)}
+                        rows="5"
+                        required
+                      />
+                    </div>
+
+                    <div className="feedback-section">
+                      <h3>Would you recommend us to a friend?</h3>
+                      <div className="recommendation">
+                        <button
+                          type="button"
+                          className={`rec-btn ${feedback.wouldRecommend === true ? 'active' : ''}`}
+                          onClick={() => handleChange('wouldRecommend', true)}
+                        >
+                          Yes, definitely!
+                        </button>
+                        <button
+                          type="button"
+                          className={`rec-btn ${feedback.wouldRecommend === false ? 'active' : ''}`}
+                          onClick={() => handleChange('wouldRecommend', false)}
+                        >
+                          Probably not
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="feedback-section">
+                      <h3>Course Satisfaction</h3>
+                      <div className="satisfaction-slider">
+                        <span>Not Satisfied</span>
+                        <input
+                          type="range"
+                          min="1"
+                          max="5"
+                          value={feedback.satisfaction}
+                          onChange={(e) => handleChange('satisfaction', parseInt(e.target.value))}
+                        />
+                        <span>Very Satisfied</span>
+                        <div className="slider-value">
+                          {Array(feedback.satisfaction).fill('★').join('')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="feedback-section">
+                      <h3>Course Difficulty</h3>
+                      <div className="difficulty-slider">
+                        <span>Too Easy</span>
+                        <input
+                          type="range"
+                          min="1"
+                          max="5"
+                          value={feedback.difficulty}
+                          onChange={(e) => handleChange('difficulty', parseInt(e.target.value))}
+                        />
+                        <span>Too Hard</span>
+                        <div className="slider-value">
+                          {feedback.difficulty}/5
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="feedback-section">
+                      <h3>Additional Comments</h3>
+                      <textarea
+                        placeholder="What did you like or what can be improved?"
+                        value={feedback.courseComments}
+                        onChange={(e) => handleChange('courseComments', e.target.value)}
+                        rows="4"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="feedback-actions">
+                  <div className="screenshot-upload">
+                    <input
+                      type="file"
+                      id="screenshot"
+                      accept="image/*"
+                      onChange={handleScreenshot}
+                      style={{ display: 'none' }}
+                    />
+                    <label htmlFor="screenshot" className="screenshot-btn">
+                      <FaCamera /> {feedback.screenshot ? 'Change Screenshot' : 'Add Screenshot'}
+                    </label>
+                    {feedback.screenshot && (
+                      <div className="screenshot-preview">
+                        <img src={feedback.screenshot} alt="Screenshot preview" />
+                        <button 
+                          type="button" 
+                          className="remove-screenshot"
+                          onClick={removeScreenshot}
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-buttons">
+                    <button 
+                      type="button" 
+                      className="btn secondary"
+                      onClick={resetForm}
+                    >
+                      Clear Form
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="btn primary"
+                      disabled={!feedback.message}
+                    >
+                      <FaPaperPlane /> Submit Feedback
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
