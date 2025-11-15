@@ -264,13 +264,6 @@ function FeedbackPage() {
                           </button>
                         ))}
                       </div>
-                      <div className="rating-labels">
-                        <span>Poor</span>
-                        <span>Fair</span>
-                        <span>Good</span>
-                        <span>Very Good</span>
-                        <span>Excellent</span>
-                      </div>
                     </div>
 
                     <div className="feedback-section">
