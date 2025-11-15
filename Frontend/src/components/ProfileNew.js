@@ -36,13 +36,43 @@ function ProfileNew() {
       dateOfBirth: '',
       gender: '',
       phone: '',
+      aadhaarNumber: '',
+      fatherName: '',
       address: '',
       bio: ''
     },
     academic: {
+      // Current academic status
       program: 'Computer Science',
       year: '3rd Year',
-      semester: 'Fall 2024',
+      semester: 'Semester 1',
+      boardUniversity: '',
+      // Past academic performance
+      lastExamScore: '',
+      lastExamScale: 'percentage', // percentage | gpa
+      weakSubjects: '',
+      // Current subjects
+      currentSubjects: '',
+      electives: '',
+      // Learning background
+      hasCoaching: '', // Yes/No
+      learningPreference: 'video', // video | reading | practice
+      // Academic goals
+      shortTermGoal: '',
+      longTermGoal: '',
+      // Exam preparation
+      upcomingExamType: '',
+      upcomingExamDate: '',
+      // Study routine
+      dailyStudyHours: '',
+      preferredStudyTime: '',
+      // Challenges (simple booleans)
+      challengeTimeManagement: false,
+      challengeMaterial: false,
+      challengeLectures: false,
+      // Marksheet image (current studies)
+      marksheetImage: '',
+      // Existing generic academic fields
       studentId: '',
       gpa: '',
       creditsCompleted: '',
@@ -467,6 +497,16 @@ function ProfileNew() {
           </select>
         </div>
         <div className="form-group">
+          <label>Father's Name</label>
+          <input
+            type="text"
+            value={profileData.personal.fatherName}
+            onChange={(e) => handleInputChange('personal', 'fatherName', e.target.value)}
+            disabled={!isEditing}
+            placeholder="Enter your father's name"
+          />
+        </div>
+        <div className="form-group">
           <label>Phone Number <span style={{color: 'red'}}>*</span></label>
           <input
             type="tel"
@@ -481,6 +521,17 @@ function ProfileNew() {
               Phone number must be exactly 10 digits
             </small>
           )}
+        </div>
+        <div className="form-group">
+          <label>Aadhaar Number</label>
+          <input
+            type="text"
+            value={profileData.personal.aadhaarNumber}
+            onChange={(e) => handleInputChange('personal', 'aadhaarNumber', e.target.value)}
+            disabled={!isEditing}
+            placeholder="Enter your Aadhaar number"
+            maxLength="12"
+          />
         </div>
         <div className="form-group full-width">
           <label>Address</label>
@@ -509,94 +560,294 @@ function ProfileNew() {
   const renderAcademicInfo = () => (
     <div className="profile-section-content">
       <div className="profile-form-grid">
+        {/* 1. Current Academic Status */}
         <div className="form-group">
-          <label>Program</label>
+          <label>Current Class / Year / Semester</label>
+          <input
+            type="text"
+            value={profileData.academic.year}
+            onChange={(e) => handleInputChange('academic', 'year', e.target.value)}
+            disabled={!isEditing}
+            placeholder="e.g., 2nd Year, Semester 3"
+          />
+        </div>
+        <div className="form-group">
+          <label>Enrolled Course / Stream</label>
           <input
             type="text"
             value={profileData.academic.program}
             onChange={(e) => handleInputChange('academic', 'program', e.target.value)}
             disabled={!isEditing}
+            placeholder="e.g., B.Tech CSE, B.Sc PCM"
           />
         </div>
         <div className="form-group">
-          <label>Student ID</label>
+          <label>Board / University (optional)</label>
           <input
             type="text"
-            value={profileData.academic.studentId}
-            onChange={(e) => handleInputChange('academic', 'studentId', e.target.value)}
+            value={profileData.academic.boardUniversity}
+            onChange={(e) => handleInputChange('academic', 'boardUniversity', e.target.value)}
             disabled={!isEditing}
-            placeholder="5-20 alphanumeric characters"
-            minLength="5"
-            maxLength="20"
+            placeholder="e.g., CBSE, RBSE, AKTU, etc."
           />
-          {profileData.academic.studentId && !validateStudentId(profileData.academic.studentId) && (
-            <small style={{color: 'red', display: 'block', marginTop: '5px'}}>
-              Student ID must be 5-20 alphanumeric characters
-            </small>
-          )}
+        </div>
+
+        {/* 2. Past Academic Performance */}
+        <div className="form-group">
+          <label>Last Exam Overall Score</label>
+          <input
+            type="text"
+            value={profileData.academic.lastExamScore}
+            onChange={(e) => handleInputChange('academic', 'lastExamScore', e.target.value)}
+            disabled={!isEditing}
+            placeholder="e.g., 82 or 8.2"
+          />
         </div>
         <div className="form-group">
-          <label>Year</label>
+          <label>Score Type</label>
           <select
-            value={profileData.academic.year}
-            onChange={(e) => handleInputChange('academic', 'year', e.target.value)}
+            value={profileData.academic.lastExamScale}
+            onChange={(e) => handleInputChange('academic', 'lastExamScale', e.target.value)}
             disabled={!isEditing}
           >
-            <option value="1st Year">1st Year</option>
-            <option value="2nd Year">2nd Year</option>
-            <option value="3rd Year">3rd Year</option>
-            <option value="4th Year">4th Year</option>
+            <option value="percentage">Percentage (%)</option>
+            <option value="gpa">GPA / CGPA</option>
+          </select>
+        </div>
+        <div className="form-group full-width">
+          <label>Major failed / low-score subjects (optional)</label>
+          <textarea
+            value={profileData.academic.weakSubjects}
+            onChange={(e) => handleInputChange('academic', 'weakSubjects', e.target.value)}
+            disabled={!isEditing}
+            placeholder="e.g., Algebra, Organic Chemistry, Mechanics..."
+            rows="2"
+          />
+        </div>
+
+        {/* 3. Current Subjects */}
+        <div className="form-group full-width">
+          <label>Current Subjects</label>
+          <textarea
+            value={profileData.academic.currentSubjects}
+            onChange={(e) => handleInputChange('academic', 'currentSubjects', e.target.value)}
+            disabled={!isEditing}
+            placeholder="List subjects you are currently studying"
+            rows="2"
+          />
+        </div>
+        <div className="form-group full-width">
+          <label>Electives (if any)</label>
+          <textarea
+            value={profileData.academic.electives}
+            onChange={(e) => handleInputChange('academic', 'electives', e.target.value)}
+            disabled={!isEditing}
+            placeholder="List your elective subjects"
+            rows="2"
+          />
+        </div>
+
+        {/* 4. Learning Background */}
+        <div className="form-group">
+          <label>Have you taken coaching/tutoring before?</label>
+          <select
+            value={profileData.academic.hasCoaching}
+            onChange={(e) => handleInputChange('academic', 'hasCoaching', e.target.value)}
+            disabled={!isEditing}
+          >
+            <option value="">Select</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
           </select>
         </div>
         <div className="form-group">
-          <label>Semester</label>
+          <label>Learning Preference</label>
+          <select
+            value={profileData.academic.learningPreference}
+            onChange={(e) => handleInputChange('academic', 'learningPreference', e.target.value)}
+            disabled={!isEditing}
+          >
+            <option value="video">Video-based</option>
+            <option value="reading">Reading-based</option>
+            <option value="practice">Practice-based</option>
+          </select>
+        </div>
+
+        {/* 5. Academic Goals */}
+        <div className="form-group full-width">
+          <label>Short-term Academic Goal</label>
+          <textarea
+            value={profileData.academic.shortTermGoal}
+            onChange={(e) => handleInputChange('academic', 'shortTermGoal', e.target.value)}
+            disabled={!isEditing}
+            placeholder="e.g., pass maths, improve physics, score above 80%"
+            rows="2"
+          />
+        </div>
+        <div className="form-group full-width">
+          <label>Long-term Academic Goal</label>
+          <textarea
+            value={profileData.academic.longTermGoal}
+            onChange={(e) => handleInputChange('academic', 'longTermGoal', e.target.value)}
+            disabled={!isEditing}
+            placeholder="e.g., JEE/NEET, placement, job, college admission"
+            rows="2"
+          />
+        </div>
+
+        {/* 6. Exam Preparation Info */}
+        <div className="form-group">
+          <label>Upcoming Exam Type</label>
+          <select
+            value={profileData.academic.upcomingExamType}
+            onChange={(e) => handleInputChange('academic', 'upcomingExamType', e.target.value)}
+            disabled={!isEditing}
+          >
+            <option value="">Select exam type</option>
+            <option value="board">Board Exam</option>
+            <option value="unit-test">Unit Test</option>
+            <option value="competitive">Competitive Exam</option>
+            <option value="internal">Internal Assessment</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Approx Exam Date</label>
           <input
-            type="text"
-            value={profileData.academic.semester}
-            onChange={(e) => handleInputChange('academic', 'semester', e.target.value)}
+            type="date"
+            value={profileData.academic.upcomingExamDate}
+            onChange={(e) => handleInputChange('academic', 'upcomingExamDate', e.target.value)}
             disabled={!isEditing}
           />
         </div>
+
+        {/* 7. Weak Areas (self-reported) */}
+        <div className="form-group full-width">
+          <label>Weak Areas / Topics (self-reported)</label>
+          <textarea
+            value={profileData.academic.weakSubjects}
+            onChange={(e) => handleInputChange('academic', 'weakSubjects', e.target.value)}
+            disabled={!isEditing}
+            placeholder="e.g., Algebra, Chemistry numericals, Mechanics..."
+            rows="3"
+          />
+        </div>
+
+        {/* 8. Study Routine (optional) */}
         <div className="form-group">
-          <label>GPA</label>
+          <label>Daily Study Hours (approx)</label>
           <input
             type="number"
-            step="0.01"
             min="0"
-            max="10"
-            value={profileData.academic.gpa}
-            onChange={(e) => handleInputChange('academic', 'gpa', e.target.value)}
+            max="24"
+            value={profileData.academic.dailyStudyHours}
+            onChange={(e) => handleInputChange('academic', 'dailyStudyHours', e.target.value)}
             disabled={!isEditing}
-            placeholder="0.00 - 10.00"
+            placeholder="e.g., 2, 4, 6"
           />
-          {profileData.academic.gpa && (!validateGPA(profileData.academic.gpa)) && (
-            <small style={{color: 'red', display: 'block', marginTop: '5px'}}>
-              GPA must be between 0 and 10
-            </small>
+        </div>
+        <div className="form-group">
+          <label>Preferred Study Time</label>
+          <select
+            value={profileData.academic.preferredStudyTime}
+            onChange={(e) => handleInputChange('academic', 'preferredStudyTime', e.target.value)}
+            disabled={!isEditing}
+          >
+            <option value="">Select</option>
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+            <option value="night">Night</option>
+          </select>
+        </div>
+
+        {/* 9. Academic Challenges (checkboxes) */}
+        <div className="form-group full-width">
+          <label>Academic Challenges (optional)</label>
+          <div className="profile-checkbox-row">
+            <label className="checkbox-inline">
+              <input
+                type="checkbox"
+                checked={profileData.academic.challengeTimeManagement}
+                onChange={(e) => handleInputChange('academic', 'challengeTimeManagement', e.target.checked)}
+                disabled={!isEditing}
+              />
+              <span>Time management issues</span>
+            </label>
+            <label className="checkbox-inline">
+              <input
+                type="checkbox"
+                checked={profileData.academic.challengeMaterial}
+                onChange={(e) => handleInputChange('academic', 'challengeMaterial', e.target.checked)}
+                disabled={!isEditing}
+              />
+              <span>Lack of study material</span>
+            </label>
+            <label className="checkbox-inline">
+              <input
+                type="checkbox"
+                checked={profileData.academic.challengeLectures}
+                onChange={(e) => handleInputChange('academic', 'challengeLectures', e.target.checked)}
+                disabled={!isEditing}
+              />
+              <span>Difficulty understanding lectures</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Marksheet photo upload */}
+        <div className="form-group full-width">
+          <label>Current Marksheet Photo (optional)</label>
+          <input
+            type="file"
+            id="marksheet-upload"
+            accept="image/*"
+            disabled={!isEditing}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setProfileData(prev => ({
+                  ...prev,
+                  academic: {
+                    ...prev.academic,
+                    marksheetImage: reader.result || ''
+                  }
+                }));
+              };
+              reader.readAsDataURL(file);
+            }}
+          />
+          {profileData.academic.marksheetImage && (
+            <div className="profile-marksheet-preview">
+              <img
+                src={profileData.academic.marksheetImage}
+                alt="Marksheet preview"
+              />
+              {isEditing && (
+                <button
+                  type="button"
+                  className="profile-remove-marksheet"
+                  onClick={() => {
+                    setProfileData(prev => ({
+                      ...prev,
+                      academic: {
+                        ...prev.academic,
+                        marksheetImage: ''
+                      }
+                    }));
+                  }}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
           )}
-        </div>
-        <div className="form-group">
-          <label>Credits Completed</label>
-          <input
-            type="number"
-            value={profileData.academic.creditsCompleted}
-            onChange={(e) => handleInputChange('academic', 'creditsCompleted', e.target.value)}
-            disabled={!isEditing}
-            placeholder="0"
-          />
-        </div>
-        <div className="form-group">
-          <label>Expected Graduation</label>
-          <input
-            type="month"
-            value={profileData.academic.expectedGraduation}
-            onChange={(e) => handleInputChange('academic', 'expectedGraduation', e.target.value)}
-            disabled={!isEditing}
-          />
         </div>
       </div>
     </div>
   );
+
 
   const renderContactInfo = () => (
     <div className="profile-section-content">
