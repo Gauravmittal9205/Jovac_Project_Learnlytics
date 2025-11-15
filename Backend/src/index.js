@@ -7,6 +7,7 @@ const path = require('path');
 // Import routes
 const authRoutes = require('./routes/api/auth');
 const profileRoutes = require('./routes/api/profile');
+const feedbackRoutes = require('./routes/feedback');
 
 
 const app = express();
@@ -39,6 +40,7 @@ mongoose.connect(DB_URI)
 // Define routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 
 // Serve static assets in production
@@ -53,8 +55,31 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Something went wrong!', error: err.message });
+    console.error('Error:', err);
+    
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+        const messages = Object.values(err.errors).map(val => val.message);
+        return res.status(400).json({
+            success: false,
+            errors: messages
+        });
+    }
+
+    // Handle JWT errors
+    if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid token'
+        });
+    }
+
+    // Handle other errors
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
 });
 
 // Start the server

@@ -3,7 +3,7 @@ import { Link, useNavigate, NavLink } from 'react-router-dom';
 import { FaStar, FaSmile, FaFrown, FaMeh, FaPaperPlane, FaCamera, FaCheckCircle, FaTimes } from 'react-icons/fa';
 
 const SESSION_KEY = 'learnlytics_session';
-const API_URL = 'http://localhost:5000/api/auth';
+const FEEDBACK_API_URL = 'http://localhost:5000/api/feedback';
 
 function readSession(){
   try { 
@@ -23,6 +23,8 @@ function FeedbackPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('general');
   const [submitted, setSubmitted] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+
   const [feedback, setFeedback] = useState({
     rating: 0,
     feedbackType: 'suggestion',
@@ -39,6 +41,18 @@ function FeedbackPage() {
   useEffect(() => { 
     if (!session) navigate('/login'); 
   }, [navigate, session]);
+
+  // Auto-hide submit message after a few seconds
+  useEffect(() => {
+    if (!submitMessage) return;
+
+    const timer = setTimeout(() => {
+      setSubmitMessage('');
+      setSubmitted(false);
+    }, 4000); // 4 seconds
+
+    return () => clearTimeout(timer);
+  }, [submitMessage]);
 
   const handleChange = (field, value) => {
     setFeedback(prev => ({ ...prev, [field]: value }));
@@ -76,7 +90,7 @@ function FeedbackPage() {
   const submitFeedback = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}`, {
+      const response = await fetch(FEEDBACK_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,10 +104,15 @@ function FeedbackPage() {
       
       if (response.ok) {
         setSubmitted(true);
+        setSubmitMessage('Feedback submitted successfully!');
         resetForm();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        setSubmitMessage(data.message || 'Failed to submit feedback. Please try again.');
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      setSubmitMessage('Error submitting feedback. Please try again.');
     }
   };
 
@@ -200,20 +219,8 @@ function FeedbackPage() {
         </div>
 
         <div className="dashboard-container">
-          {submitted ? (
-            <div className="feedback-success">
-              <FaCheckCircle className="success-icon" />
-              <h2>Thank You for Your Feedback!</h2>
-              <p>We appreciate you taking the time to help us improve your learning experience.</p>
-              <button 
-                onClick={() => setSubmitted(false)} 
-                className="btn-primary"
-              >
-                Submit Another Feedback
-              </button>
-            </div>
-          ) : (
-            <div className="feedback-container">
+          <div className="feedback-container">
+
               <div className="feedback-tabs">
                 <button 
                   className={`tab-btn ${activeTab === 'general' ? 'active' : ''}`}
@@ -230,6 +237,7 @@ function FeedbackPage() {
               </div>
 
               <form onSubmit={submitFeedback} className="feedback-form">
+
                 {activeTab === 'general' ? (
                   <>
                     <div className="feedback-section">
@@ -365,6 +373,7 @@ function FeedbackPage() {
                 )}
 
                 <div className="feedback-actions">
+
                   <div className="screenshot-upload">
                     <input
                       type="file"
@@ -406,12 +415,18 @@ function FeedbackPage() {
                       <FaPaperPlane /> Submit Feedback
                     </button>
                   </div>
+                  {submitMessage && (
+                    <div className={`feedback-submit-message ${submitted ? 'success' : 'error'}`}>
+                      {submitted && <FaCheckCircle className="success-icon" />}
+                      <span>{submitMessage}</span>
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+
     </div>
   );
 }
