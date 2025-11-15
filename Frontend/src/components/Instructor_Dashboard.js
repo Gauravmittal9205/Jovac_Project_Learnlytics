@@ -13,17 +13,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LabelList,
   PieChart,
   Pie,
   Cell,
   AreaChart,
   Area,
   Legend,
-  RadarChart,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar
 } from "recharts";
 const SESSION_KEY = 'learnlytics_session';
 const API_URL = 'http://localhost:5000/api/auth';
