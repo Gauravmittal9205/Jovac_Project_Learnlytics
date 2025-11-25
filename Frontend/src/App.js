@@ -21,9 +21,18 @@ import FeedbackPage from './components/Feedback';
 import ResourcesPage from './components/ResourcePage';
 import Home from './components/Home'
 import MyInstructorsPage from './components/MyInstructorPage';
+import SubscriptionPlans from './components/Payment/SubscriptionPlans';
 import SchedulePage from './components/SchedulePage';
 import AcademicPerformancePage from './components/AcademicPerformancePage'
 import MyStudentsPage from './components/MyStudentPage';
+
+// Stripe imports
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+
+// Load Stripe with your publishable key
+const stripePublicKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY;
+const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
 
 
 // Auth helpers
@@ -245,132 +254,267 @@ function App() {
   };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
-      <div className="site">
-        {!isDashboardPage && (
-          <nav className="navbar">
-            <div className="container nav-inner">
-              <div className="brand">
-                <span className="logo-shield" aria-hidden="true">🛡️</span>
-                <span className="brand-text">Learnlytics</span>
-              </div>
-              <ul className="nav-links">
-                <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
-                <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
-                <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
-                <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
-              </ul>
-              <div className="auth-actions">
-                {!currentUser ? (
-                  <>
-                    <button className="btn ghost" onClick={() => navigate('/login')}>Login</button>
-                    <button className="btn primary" onClick={() => navigate('/register')}>Sign Up</button>
-                  </>
-                ) : (
-                  <>
-                    <button className="btn primary" onClick={() => navigate(currentUser.role === 'instructor' ? '/dashboard-instructor' : '/overview')}>Dashboard</button>
-                    <button className="btn ghost" onClick={handleLogout}>Logout</button>
-                  </>
-                )}
-              </div>
+    <>
+      {stripePromise ? (
+        <Elements stripe={stripePromise}>
+          <AuthContext.Provider value={authContextValue}>
+            <div className="site">
+              {!isDashboardPage && (
+                <nav className="navbar">
+                  <div className="container nav-inner">
+                    <div className="brand">
+                      <span className="logo-shield" aria-hidden="true">🛡️</span>
+                      <span className="brand-text">Learnlytics</span>
+                    </div>
+                    <ul className="nav-links">
+                      <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
+                      <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
+                      <li><a href="#pricing"><span className="nav-icon" aria-hidden="true"></span><span>Pricing</span></a></li>
+                      <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
+                      <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
+                    </ul>
+                    <div className="auth-actions">
+                      {!currentUser ? (
+                        <>
+                          <button className="btn ghost" onClick={() => navigate('/login')}>Login</button>
+                          <button className="btn primary" onClick={() => navigate('/register')}>Sign Up</button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="btn primary" onClick={() => navigate(currentUser.role === 'instructor' ? '/dashboard-instructor' : '/overview')}>Dashboard</button>
+                          <button className="btn ghost" onClick={handleLogout}>Logout</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </nav>
+              )}
+
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/resources" element={<Resources />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/contact" element={<Contact />} />
+                
+                {/* Auth Routes */}
+                <Route path="/login" element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                } />
+                <Route path="/register" element={
+                  <PublicRoute>
+                    <RegisterPage />
+                  </PublicRoute>
+                } />
+                <Route path="/forget" element={
+                  <PublicRoute>
+                    <ForgotPasswordPage />
+                  </PublicRoute>
+                } />
+
+                {/* Protected Routes */}
+                <Route path="/overview" element={
+                  <ProtectedRoute>
+                    <OverviewPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={<ProfileNew />} />
+                <Route path="/dashboard-instructor" element={
+                  <ProtectedRoute roles={['instructor']}>
+                    <InstructorDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/feedback" element={
+                  <ProtectedRoute>
+                    <FeedbackPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/weekly-report" element={
+                  <ProtectedRoute>
+                    <WeeklyReport />
+                  </ProtectedRoute>
+                } />
+                <Route path="/risk-status" element={
+                  <ProtectedRoute>
+                    <RiskStatusPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/my-instructors" element={
+                  <ProtectedRoute>
+                    <MyInstructorsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/recommendation/:topic" element={
+                  <ProtectedRoute>
+                    <RecommendationPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/schedule" element={
+                  <ProtectedRoute>
+                    <SchedulePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/course-analysis" element={
+                  <ProtectedRoute>
+                    <CourseAnalysisPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/academic-performance" element={
+                  <ProtectedRoute>
+                    <AcademicPerformancePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/my-students" element={
+                  <ProtectedRoute roles={['instructor']}>
+                    <MyStudentsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/Studentresources" element={
+                  <ProtectedRoute>
+                    <ResourcesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/insoverview" element={
+                  <ProtectedRoute roles={['instructor']}>
+                    <InstructorDashboard />
+                  </ProtectedRoute>
+                } />
+              </Routes>
             </div>
-          </nav>
-        )}
+          </AuthContext.Provider>
+        </Elements>
+      ) : (
+        <AuthContext.Provider value={authContextValue}>
+          <div className="site">
+            {!isDashboardPage && (
+              <nav className="navbar">
+                <div className="container nav-inner">
+                  <div className="brand">
+                    <span className="logo-shield" aria-hidden="true">🛡️</span>
+                    <span className="brand-text">Learnlytics</span>
+                  </div>
+                  <ul className="nav-links">
+                    <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
+                    <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
+                    <li><a href="#pricing"><span className="nav-icon" aria-hidden="true"></span><span>Pricing</span></a></li>
+                    <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
+                    <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
+                  </ul>
+                  <div className="auth-actions">
+                    {!currentUser ? (
+                      <>
+                        <button className="btn ghost" onClick={() => navigate('/login')}>Login</button>
+                        <button className="btn primary" onClick={() => navigate('/register')}>Sign Up</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn primary" onClick={() => navigate(currentUser.role === 'instructor' ? '/dashboard-instructor' : '/overview')}>Dashboard</button>
+                        <button className="btn ghost" onClick={handleLogout}>Logout</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </nav>
+            )}
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/contact" element={<Contact />} />
-          
-          {/* Auth Routes */}
-          <Route path="/login" element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          } />
-          <Route path="/register" element={
-            <PublicRoute>
-              <RegisterPage />
-            </PublicRoute>
-          } />
-          <Route path="/forget" element={
-            <PublicRoute>
-              <ForgotPasswordPage />
-            </PublicRoute>
-          } />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/contact" element={<Contact />} />
+              
+              {/* Auth Routes */}
+              <Route path="/login" element={
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              } />
+              <Route path="/register" element={
+                <PublicRoute>
+                  <RegisterPage />
+                </PublicRoute>
+              } />
+              <Route path="/forget" element={
+                <PublicRoute>
+                  <ForgotPasswordPage />
+                </PublicRoute>
+              } />
 
-          {/* Protected Routes */}
-          <Route path="/overview" element={
-            <ProtectedRoute>
-              <OverviewPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={<ProfileNew />} />
-          <Route path="/dashboard-instructor" element={
-            <ProtectedRoute roles={['instructor']}>
-              <InstructorDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/feedback" element={
-            <ProtectedRoute>
-              <FeedbackPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/weekly-report" element={
-            <ProtectedRoute>
-              <WeeklyReport />
-            </ProtectedRoute>
-          } />
-          <Route path="/risk-status" element={
-            <ProtectedRoute>
-              <RiskStatusPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/my-instructors" element={
-            <ProtectedRoute>
-              <MyInstructorsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/recommendation/:topic" element={
-            <ProtectedRoute>
-              <RecommendationPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/schedule" element={
-            <ProtectedRoute>
-              <SchedulePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/course-analysis" element={
-            <ProtectedRoute>
-              <CourseAnalysisPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/academic-performance" element={
-            <ProtectedRoute>
-              <AcademicPerformancePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/my-students" element={
-            <ProtectedRoute roles={['instructor']}>
-              <MyStudentsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/Studentresources" element={
-            <ProtectedRoute>
-              <ResourcesPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/insoverview" element={
-            <ProtectedRoute roles={['instructor']}>
-              <InstructorDashboard />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </div>
-    </AuthContext.Provider>
+              {/* Protected Routes */}
+              <Route path="/overview" element={
+                <ProtectedRoute>
+                  <OverviewPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={<ProfileNew />} />
+              <Route path="/dashboard-instructor" element={
+                <ProtectedRoute roles={['instructor']}>
+                  <InstructorDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/feedback" element={
+                <ProtectedRoute>
+                  <FeedbackPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/weekly-report" element={
+                <ProtectedRoute>
+                  <WeeklyReport />
+                </ProtectedRoute>
+              } />
+              <Route path="/risk-status" element={
+                <ProtectedRoute>
+                  <RiskStatusPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/my-instructors" element={
+                <ProtectedRoute>
+                  <MyInstructorsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/recommendation/:topic" element={
+                <ProtectedRoute>
+                  <RecommendationPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/schedule" element={
+                <ProtectedRoute>
+                  <SchedulePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/course-analysis" element={
+                <ProtectedRoute>
+                  <CourseAnalysisPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/academic-performance" element={
+                <ProtectedRoute>
+                  <AcademicPerformancePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/my-students" element={
+                <ProtectedRoute roles={['instructor']}>
+                  <MyStudentsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/Studentresources" element={
+                <ProtectedRoute>
+                  <ResourcesPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/insoverview" element={
+                <ProtectedRoute roles={['instructor']}>
+                  <InstructorDashboard />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </div>
+        </AuthContext.Provider>
+      )}
+    </>
   );
 }
 function LoginPage(){

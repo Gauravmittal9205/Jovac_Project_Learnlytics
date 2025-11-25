@@ -61,12 +61,40 @@ const ProfileSchema = new mongoose.Schema(
       bio: String
     },
     academic: {
+      // Current academic status
       program: String,
       year: {
         type: String,
         enum: ['1st Year', '2nd Year', '3rd Year', '4th Year', '']
       },
       semester: String,
+      boardUniversity: String,
+      // Past academic performance
+      lastExamScore: String,
+      lastExamScale: String, // percentage | gpa
+      weakSubjects: String,
+      // Current subjects
+      currentSubjects: String,
+      electives: String,
+      // Learning background
+      hasCoaching: String, // Yes/No
+      learningPreference: String, // video | reading | practice
+      // Academic goals
+      shortTermGoal: String,
+      longTermGoal: String,
+      // Exam preparation
+      upcomingExamType: String,
+      upcomingExamDate: String,
+      // Study routine
+      dailyStudyHours: String,
+      preferredStudyTime: String,
+      // Challenges (simple booleans)
+      challengeTimeManagement: Boolean,
+      challengeMaterial: Boolean,
+      challengeLectures: Boolean,
+      // Marksheet image (current studies)
+      marksheetImage: String,
+      // Existing generic academic fields
       studentId: {
         type: String,
         validate: {

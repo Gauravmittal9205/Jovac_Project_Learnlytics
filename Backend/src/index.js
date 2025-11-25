@@ -9,6 +9,7 @@ const authRoutes = require('./routes/api/auth');
 const profileRoutes = require('./routes/api/profile');
 const feedbackRoutes = require('./routes/feedback');
 const academicRoutes = require('./routes/api/academicRoutes');
+const hackathonRoutes = require('./routes/api/hackathons');
 
 
 const app = express();
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/academic', academicRoutes);
+app.use('/api/hackathons', hackathonRoutes);
 
 
 // Serve static assets in production
