@@ -3,11 +3,15 @@ import { Routes, Route, Link, useNavigate, useParams, Navigate, BrowserRouter as
 import WebinarRegistrationModal from './WebinarRegistrationModal';
 import PaymentFormModal from './PaymentFormModal';
 import SubscriptionSuccessModal from './SubscriptionSuccessModal';
-import {StepCard,Stat,WebinarCard,FooterCol,NewsletterSignup} from './HomeComponents'
+import {StepCard,Stat,WebinarCard,FooterCol,NewsletterSignup} from './HomeComponents';
 import CustomSubscriptionModal from './CustomSubscriptionModal';
 import AIChatbotModal from './AI_Chat_Bot';
 import PricingCard from './PricingCard';
 import { ImOpt } from 'react-icons/im';
+import SubscriptionPlans from './Payment/SubscriptionPlans';
+import HackathonsSection from './HackathonsSection';
+import styled from 'styled-components';
+
 const SESSION_KEY = 'learnlytics_session';
 const API_URL = 'http://localhost:5000/api/auth';
 
@@ -23,6 +27,7 @@ function readSession(){
 function clearSession(){ 
   localStorage.removeItem(SESSION_KEY); 
 }
+
 function Home(){
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
@@ -85,7 +90,7 @@ function Home(){
         </div>
       </section>
 
-
+      {/* Why choose us */}
       <section className="why container">
         <h2 className="section-title">Why choose us</h2>
         <p className="section-sub">Clear advantages over generic dashboards and alert systems.</p>
@@ -116,60 +121,28 @@ function Home(){
         {/* Feature grid removed per request */}
       </section>
 
-      {/* Engagement & Conversion Sections */}
-      <section className="pricing container">
-        <h2 className="section-title">Simple, transparent pricing</h2>
-        <p className="section-sub">Choose the plan that fits your institution's needs</p>
-        <div className="pricing-grid reveal">
-          <PricingCard 
-            plan="Starter" 
-            price="99" 
-            period="month"
-            features={[
-              'Up to 500 students',
-              'Basic analytics dashboard',
-              'Email support',
-              'Standard integrations'
-            ]}
-            popular={false}
-            cta="Start Free Trial"
-            onCtaClick={() => setPaymentForm({ isOpen: true, plan: { name: 'Starter', price: '99', period: 'month' } })}
-          />
-          <PricingCard 
-            plan="Professional" 
-            price="299" 
-            period="month"
-            features={[
-              'Up to 2,000 students',
-              'Advanced AI insights',
-              'Priority support',
-              'Custom integrations',
-              'White-label options'
-            ]}
-            popular={true}
-            cta="Start Free Trial"
-            onCtaClick={() => setPaymentForm({ isOpen: true, plan: { name: 'Professional', price: '299', period: 'month' } })}
-          />
-          <PricingCard 
-            plan="Enterprise" 
-            price="Custom" 
-            period=""
-            features={[
-              'Unlimited students',
-              'Full AI suite',
-              'Dedicated support',
-              'Custom development',
-              'On-premise options'
-            ]}
-            popular={false}
-            cta="Custom Quote"
-            onCtaClick={() => setCustomSubscription({ isOpen: true, plan: { name: 'Enterprise', type: 'custom' } })}
-          />
+      {/* Upcoming Hackathons & Webinars */}
+      <HackathonsSection />
+
+      {/* Subscription Plans Section */}
+      <SubscriptionSection id="pricing">
+        <div className="container">
+          <h2 className="section-title">Simple, Transparent Pricing</h2>
+          <p className="section-sub">Choose the perfect plan for your needs</p>
+          <SubscriptionPlans />
+          <div className="enterprise-cta">
+            <p>Need a custom solution for your institution?</p>
+            <button 
+              className="btn outline" 
+              onClick={() => setCustomSubscription({ isOpen: true, plan: 'enterprise' })}
+            >
+              Contact Sales
+            </button>
+          </div>
         </div>
-        <div className="pricing-note">
-          <p>All plans include a 14-day free trial. No credit card required.</p>
-        </div>
-      </section>
+      </SubscriptionSection>
+
+      
 
       <section className="trial-cta">
         <div className="container">
@@ -206,39 +179,7 @@ function Home(){
         </div>
       </section>
 
-      <section className="webinar container">
-        <h2 className="section-title">Upcoming events & webinars</h2>
-        <p className="section-sub">Learn from experts and connect with other educators</p>
-        <div className="webinar-grid reveal">
-          <WebinarCard 
-            title="AI in Education: Best Practices"
-            date="March 15, 2025"
-            time="2:00 PM EST"
-            speaker="Dr. Sarah Chen"
-            spots="45 spots left"
-            image="🎓"
-            onRegister={(webinar) => setWebinarRegistration({ isOpen: true, webinar })}
-          />
-          <WebinarCard 
-            title="Student Engagement Strategies"
-            date="March 22, 2025"
-            time="1:00 PM EST"
-            speaker="Prof. Michael Rodriguez"
-            spots="32 spots left"
-            image="📚"
-            onRegister={(webinar) => setWebinarRegistration({ isOpen: true, webinar })}
-          />
-          <WebinarCard 
-            title="Data Privacy in EdTech"
-            date="March 29, 2025"
-            time="3:00 PM EST"
-            speaker="Legal Team"
-            spots="28 spots left"
-            image="🔒"
-            onRegister={(webinar) => setWebinarRegistration({ isOpen: true, webinar })}
-          />
-        </div>
-      </section>
+      
 
       <footer className="footer" id="contact">
         <div className="container footer-grid">
@@ -295,18 +236,7 @@ function Home(){
         </div>
       )}
 
-      {/* Webinar Registration Modal */}
-      <WebinarRegistrationModal
-        webinar={webinarRegistration.webinar}
-        isOpen={webinarRegistration.isOpen}
-        onClose={() => setWebinarRegistration({ isOpen: false, webinar: null })}
-        onSubmit={(formData) => {
-          // Handle form submission - you can add API call here
-          console.log('Webinar registration:', { webinar: webinarRegistration.webinar, ...formData });
-          alert(`Thank you for registering for "${webinarRegistration.webinar.title}"! You will receive a confirmation email shortly.`);
-          setWebinarRegistration({ isOpen: false, webinar: null });
-        }}
-      />
+      
 
       {/* Subscription Success Modal */}
       <SubscriptionSuccessModal
@@ -358,5 +288,67 @@ function Home(){
     </>
   );
 }
+
+// Styled Components
+const SubscriptionSection = styled.section`
+  padding: 4rem 0;
+  background: #f8fafc;
+  text-align: center;
+  
+  .section-title {
+    font-size: 2.5rem;
+    color: #1e293b;
+    margin-bottom: 1rem;
+  }
+  
+  .section-sub {
+    font-size: 1.25rem;
+    color: #64748b;
+    margin-bottom: 3rem;
+  }
+  
+  .enterprise-cta {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    
+    p {
+      font-size: 1.125rem;
+      color: #475569;
+      margin-bottom: 1.5rem;
+    }
+    
+    .btn.outline {
+      background: transparent;
+      border: 2px solid #4f46e5;
+      color: #4f46e5;
+      font-weight: 600;
+      padding: 0.75rem 2rem;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: #4f46e5;
+        color: white;
+      }
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 3rem 1rem;
+    
+    .section-title {
+      font-size: 2rem;
+    }
+    
+    .section-sub {
+      font-size: 1.1rem;
+    }
+  }
+`;
 
 export default Home;
