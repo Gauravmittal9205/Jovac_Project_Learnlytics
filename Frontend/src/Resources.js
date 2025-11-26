@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { css, keyframes } from 'styled-components';
+import axios from 'axios';
+import { FaGithub, FaCode, FaQuestionCircle, FaGraduationCap, FaExternalLinkAlt } from 'react-icons/fa';
 
 // Custom hook for scroll-based reveal animation
 const useRevealOnScroll = () => {
@@ -38,8 +40,19 @@ const SectionContainer = styled.section`
   margin: 0 auto;
   text-align: center;
   
+  .section-title {
+    color: #000000;
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  
   @media (min-width: 768px) {
     padding: 6rem 2rem;
+    
+    .section-title {
+      font-size: 3rem;
+    }
   }
 `;
 
@@ -152,7 +165,60 @@ const ResourceGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
-  margin-top: 2rem;
+  padding: 1rem;
+  .resource-section {
+    margin: 2rem 0;
+    min-height: 300px;
+    padding: 1rem;
+    
+    .loading-state, .error-state, .no-results {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 0;
+      text-align: center;
+      min-height: 300px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin: 1rem 0;
+      
+      p {
+        margin: 1rem 0;
+        color: #4a5568;
+        font-size: 1.1rem;
+      }
+      
+      button {
+        margin-top: 1rem;
+        padding: 0.5rem 1.5rem;
+        background: #3182ce;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s;
+        
+        &:hover {
+          background: #2c5282;
+        }
+      }
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #3182ce;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  }
   animation: ${fadeIn} 0.5s ease-in-out;
 `;
 
@@ -181,6 +247,43 @@ const TileContainer = styled.div`
   .tile-meta {
     padding: 1.5rem;
     text-align: left;
+    position: relative;
+  }
+  
+  .tile-icon {
+    margin-right: 8px;
+    color: #4a5568;
+  }  
+  
+  .tile-link {
+    display: flex;
+    align-items: center;
+    color: #3182ce;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+    cursor: pointer;
+    
+    svg {
+      margin-right: 6px;
+      font-size: 0.8em;
+    }
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  
+  .tile-placeholder {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f7fafc;
+    color: #a0aec0;
+    
+    svg {
+      font-size: 2.5rem;
+    }
   }
 
   .tile-title {
@@ -197,15 +300,33 @@ const TileContainer = styled.div`
 `;
 
 const FeatureCard = styled.div`
-  background-color: #48bb78;
+  background-color: #4299e1;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-5px);
+  }
+  
+  .feature-placeholder {
+    background-color: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    color: white;
+    
+    svg {
+      opacity: 0.8;
+    }
+  }
   color: #fff;
   padding: 2.5rem;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  text-align: left;
-  
+
   @media (min-width: 768px) {
     flex-direction: row;
     align-items: center;
@@ -266,6 +387,7 @@ const Button = styled.a`
 `;
 
 const CTASection = styled.section`
+  background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
   padding: 4rem 1rem;
   max-width: 1200px;
   margin: 0 auto;
@@ -313,7 +435,6 @@ const CTAActions = styled.div`
   }
 `;
 
-
 // =========================================================================
 // REACT COMPONENTS
 // =========================================================================
@@ -326,13 +447,45 @@ function TabButton({ active, onClick, children }){
   );
 }
 
-function Tile({ img, title, sub }){
+function Tile({ img, title, sub, type, url, onClick }){
+  const getTypeIcon = () => {
+    switch(type) {
+      case 'github':
+        return <FaGithub className="tile-icon" />;
+      case 'quiz':
+        return <FaQuestionCircle className="tile-icon" />;
+      case 'course':
+        return <FaGraduationCap className="tile-icon" />;
+      case 'hackathon':
+        return <FaCode className="tile-icon" />;
+      default:
+        return <FaExternalLinkAlt className="tile-icon" />;
+    }
+  };
+
   return (
-    <TileContainer>
-      <img src={img} alt={title} />
+    <TileContainer onClick={() => onClick && onClick(url)}>
+      {img ? (
+        <img src={img} alt={title} onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = 'https://via.placeholder.com/400x200?text=No+Image';
+        }} />
+      ) : (
+        <div className="tile-placeholder">
+          {getTypeIcon()}
+        </div>
+      )}
       <div className="tile-meta">
-        <div className="tile-title">{title}</div>
+        <div className="tile-title">
+          {getTypeIcon()}
+          {title}
+        </div>
         <div className="tile-sub">{sub}</div>
+        {url && (
+          <div className="tile-link">
+            <FaExternalLinkAlt /> View Resource
+          </div>
+        )}
       </div>
     </TileContainer>
   );
@@ -340,38 +493,267 @@ function Tile({ img, title, sub }){
 
 const SECTIONS = [
   { key: 'all', label: 'All' },
-  { key: 'cases', label: 'Case studies' },
-  { key: 'webinars', label: 'Webinars' },
+  { key: 'cases', label: 'Case Studies' },
   { key: 'hackathons', label: 'Hackathons' },
   { key: 'quizzes', label: 'Quizzes' },
-  { key: 'certifications', label: 'Certifications' },
+  { key: 'courses', label: 'Courses' },
 ];
 
-const ITEMS = [
-  { id: 'cs-cc', category: 'cases', title: 'Community college', sub: 'Boosting pass rates', img: 'https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'cs-k12', category: 'cases', title: 'K‑12 district', sub: 'Improving attendance', img: 'https://images.unsplash.com/photo-1523246191548-8b1421f6b7cf?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'cs-uni', category: 'cases', title: 'University', sub: 'Reducing DFW rates', img: 'https://images.unsplash.com/photo-1457694587812-e8bf29a43845?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'wb-tour', category: 'webinars', title: '15‑min product tour', sub: 'Guided overview', img: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'wb-explain', category: 'webinars', title: 'Designing explainable alerts', sub: 'What makes alerts trustworthy', img: 'https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'wb-privacy', category: 'webinars', title: 'Privacy‑first analytics', sub: 'Safeguards that matter', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'hk-campus', category: 'hackathons', title: 'Campus hackathon', sub: '48‑hour student sprint', img: 'https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'hk-edu', category: 'hackathons', title: 'EdTech weekend', sub: 'Instructor‑led challenges', img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'qz-ai', category: 'quizzes', title: 'AI literacy quiz', sub: '10‑minute check', img: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'qz-ethics', category: 'quizzes', title: 'Ethics & privacy quiz', sub: 'Classroom scenarios', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'cf-instructor', category: 'certifications', title: 'Certified Instructor', sub: 'Learnlytics Level 1', img: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1200&auto=format&fit=crop' },
-  { id: 'cf-admin', category: 'certifications', title: 'Certified Admin', sub: 'Deploy & govern', img: 'https://images.unsplash.com/photo-1533228100845-08145b01de14?q=80&w=1200&auto=format&fit=crop' },
-];
+// API endpoints
+const API_ENDPOINTS = {
+  CASE_STUDIES: 'https://api.github.com/orgs/opencasestudies/repos',
+  HACKATHONS: 'https://www.hackerearth.com/chrome-extension/events/',
+  QUIZZES: 'https://opentdb.com/api.php?amount=10&type=multiple',
+  COURSES: 'https://api.coursera.org/api/courses.v1'
+};
 
 export default function Resources(){
-  const [active, setActive] = React.useState('all');
+  const [active, setActive] = useState('all');
+  const [resources, setResources] = useState({
+    cases: [],
+    hackathons: [],
+    quizzes: [],
+    courses: [],
+    loading: true,
+    error: null
+  });
   useRevealOnScroll();
 
-  const filtered = React.useMemo(() => {
-    if (active === 'all') return ITEMS;
-    return ITEMS.filter(i => i.category === active);
-  }, [active]);
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        setResources(prev => ({ ...prev, loading: true, error: null }));
+        
+        // Use Promise.all to fetch in parallel
+        const [caseStudiesRes, quizzesRes] = await Promise.allSettled([
+          axios.get(API_ENDPOINTS.CASE_STUDIES, {
+            timeout: 5000, // 5 second timeout
+            headers: {
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          }),
+          axios.get(API_ENDPOINTS.QUIZZES, { timeout: 5000 })
+        ]);
 
-  const featuredItem = ITEMS.find(item => item.id === 'wb-tour');
+        // Common fallback images for different resource types
+        const FALLBACK_IMAGES = {
+          cases: [
+            'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000', // Data analysis
+            'https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=1000', // ML/AI
+            'https://images.unsplash.com/photo-1581092921461-39b2f2f8a4c6?q=80&w=1000', // Data visualization
+            'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000', // Statistics
+            'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000', // Coding
+            'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=1000', // Web development
+            'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=1000', // Programming
+            'https://images.unsplash.com/photo-1517694712201-5dd0d6c4c3ad?q=80&w=1000', // Mobile development
+            'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=1000', // Electronics
+            'https://images.unsplash.com/photo-1551434678-3d3f7c9d9a5b?q=80&w=1000'  // Code review
+          ],
+          hackathons: [
+            'https://images.unsplash.com/photo-1551033406-611cf9a28f67?q=80&w=1000',
+            'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?q=80&w=1000',
+            'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?q=80&w=1000',
+            'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000'
+          ],
+          quizzes: [
+            'https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=1000',
+            'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=1000',
+            'https://images.unsplash.com/photo-1503676260728-1c00da094a0a?q=80&w=1000'
+          ],
+          courses: [
+            'https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=1000',
+            'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=1000',
+            'https://images.unsplash.com/photo-1503676260728-1c00da094a0a?q=80&w=1000'
+          ]
+        };
+        
+        // Function to get a fallback image based on category and index
+        const getFallbackImage = (category, index) => {
+          const images = FALLBACK_IMAGES[category] || FALLBACK_IMAGES.cases;
+          return images[index % images.length];
+        };
+        
+        // Process case studies
+        let caseStudies = [];
+        if (caseStudiesRes.status === 'fulfilled') {
+          // Get shuffled images for case studies
+          const shuffledImages = [...FALLBACK_IMAGES.cases].sort(() => 0.5 - Math.random());
+
+          // Get first 10 case studies with unique images
+          const uniqueRepos = Array.from(new Set(caseStudiesRes.value.data.map(r => r.id)))
+            .map(id => caseStudiesRes.value.data.find(r => r.id === id))
+            .filter(Boolean) // Remove any undefined entries
+            .slice(0, 10); // Get up to 10 unique repos
+
+          caseStudies = uniqueRepos.map((repo, index) => {
+            // Use modulo to cycle through images if we have more repos than images
+            const imageIndex = index % shuffledImages.length;
+            const imageUrl = shuffledImages[imageIndex];
+
+            return {
+              id: `case-${repo.id}`,
+              title: repo.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              sub: repo.description || 'Open source case study',
+              img: imageUrl,
+              url: repo.html_url,
+              type: 'github',
+              category: 'cases',
+              updated: new Date(repo.updated_at).toLocaleDateString()
+            };
+          });
+        } else {
+          console.warn('Failed to fetch case studies:', caseStudiesRes.reason?.message || 'Unknown error');
+          // Add fallback case studies with unique images if API fails
+          caseStudies = [
+            {
+              id: 'case-1',
+              title: 'Data Analysis Case Study',
+              sub: 'Comprehensive data analysis workflow',
+              img: getFallbackImage('cases', 0),
+              url: 'https://github.com/opencasestudies',
+              type: 'github',
+              category: 'cases',
+              updated: new Date().toLocaleDateString()
+            },
+            {
+              id: 'case-2',
+              title: 'Machine Learning Project',
+              sub: 'End-to-end ML pipeline implementation',
+              img: getFallbackImage('cases', 1),
+              url: 'https://github.com/opencasestudies',
+              type: 'github',
+              category: 'cases',
+              updated: new Date().toLocaleDateString()
+            },
+            {
+              id: 'case-3',
+              title: 'Web Development',
+              sub: 'Modern web application development',
+              img: getFallbackImage('cases', 2),
+              url: 'https://github.com/opencasestudies',
+              type: 'github',
+              category: 'cases',
+              updated: new Date().toLocaleDateString()
+            },
+            {
+              id: 'case-4',
+              title: 'Mobile App Development',
+              sub: 'Cross-platform mobile applications',
+              img: getFallbackImage('cases', 3),
+              url: 'https://github.com/opencasestudies',
+              type: 'github',
+              category: 'cases',
+              updated: new Date().toLocaleDateString()
+            },
+            {
+              id: 'case-5',
+              title: 'Data Visualization',
+              sub: 'Interactive data dashboards',
+              img: getFallbackImage('cases', 4),
+              url: 'https://github.com/opencasestudies',
+              type: 'github',
+              category: 'cases',
+              updated: new Date().toLocaleDateString()
+            }
+          ];
+        }
+
+        // Process quizzes
+        let quizzes = [];
+        if (quizzesRes.status === 'fulfilled') {
+          quizzes = quizzesRes.value.data.results.slice(0, 4).map((quiz, index) => ({
+            id: `quiz-${index}`,
+            title: `Quiz: ${quiz.category}`,
+            sub: quiz.question.replace(/&[a-z]+;/g, '').substring(0, 100) + '...',
+            img: getFallbackImage('quizzes', index),
+            type: 'quiz',
+            category: 'quizzes',
+            difficulty: quiz.difficulty,
+            answers: [quiz.correct_answer, ...quiz.incorrect_answers],
+            correctAnswer: quiz.correct_answer
+          }));
+        } else {
+          console.warn('Failed to fetch quizzes:', quizzesRes.reason?.message || 'Unknown error');
+        }
+
+        // Add default hackathons with fallback images
+        const hackathons = [
+          {
+            id: 'hack-1',
+            title: 'Upcoming Hackathons',
+            sub: 'Participate in coding challenges and win prizes',
+            url: 'https://www.hackerearth.com/challenges/',
+            type: 'hackathon',
+            category: 'hackathons',
+            img: getFallbackImage('hackathons', 0)
+          },
+          {
+            id: 'hack-2',
+            title: 'Global AI Hackathon',
+            sub: 'Build AI solutions for real-world problems',
+            url: 'https://www.hackerearth.com/challenges/competitive/hackathons/',
+            type: 'hackathon',
+            category: 'hackathons',
+            img: getFallbackImage('hackathons', 1)
+          }
+        ];
+
+        // Add default courses with fallback images
+        const courses = [
+          {
+            id: 'course-1',
+            title: 'Data Science Specialization',
+            sub: 'Master data science with hands-on projects',
+            url: 'https://www.coursera.org/specializations/jhu-data-science',
+            type: 'course',
+            category: 'courses',
+            img: getFallbackImage('courses', 0)
+          },
+          {
+            id: 'course-2',
+            title: 'Web Development Bootcamp',
+            sub: 'Learn full-stack web development',
+            url: 'https://www.udemy.com/course/the-web-developer-bootcamp/',
+            type: 'course',
+            category: 'courses',
+            img: getFallbackImage('courses', 1)
+          }
+        ];
+
+        setResources({
+          cases: caseStudies,
+          hackathons,
+          quizzes,
+          courses,
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error('Error fetching resources:', error);
+        setResources(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load resources. Please try again later.'
+        }));
+      }
+    };
+
+    fetchResources();
+  }, []);
+
+  const allItems = [
+    ...resources.cases,
+    ...resources.hackathons,
+    ...resources.quizzes,
+    ...resources.courses
+  ];
+
+  const filteredItems = React.useMemo(() => {
+    if (active === 'all') return allItems;
+    return allItems.filter(item => item.category === active);
+  }, [active, allItems]);
+
+  const featuredItem = allItems[0];
 
   return (
     <StyledResourcesPage>
@@ -387,23 +769,10 @@ export default function Resources(){
       </UniqueHeader>
 
       {/* Featured Resource Section */}
-      <SectionContainer>
-        <h2 className="section-title reveal">Featured Resource</h2>
-        <p className="section-subtext reveal">Take a quick tour of the Learnlytics platform with a guided video overview.</p>
-        {featuredItem && (
-          <FeatureCard className="reveal">
-            <img src={featuredItem.img} alt={featuredItem.title} />
-            <div className="feature-content">
-              <h3>{featuredItem.title}</h3>
-              <p>{featuredItem.sub}</p>
-              <Button href="#" className="ghost">Watch now</Button>
-            </div>
-          </FeatureCard>
-        )}
-      </SectionContainer>
-
+      
       {/* Main Resources Section */}
       <SectionContainer>
+        <h2 className="section-title reveal">Featured Resource</h2>
         <div className="reveal">
           <TabsContainer>
             {SECTIONS.map(s => (
@@ -413,11 +782,35 @@ export default function Resources(){
         </div>
         
         <div className="resource-section reveal">
-          <ResourceGrid>
-            {filtered.map(item => (
-              <Tile key={item.id} img={item.img} title={item.title} sub={item.sub} />
-            ))}
-          </ResourceGrid>
+          {resources.loading ? (
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>Loading resources...</p>
+            </div>
+          ) : resources.error ? (
+            <div className="error-state">
+              <p>{resources.error}</p>
+              <Button onClick={() => window.location.reload()}>Retry</Button>
+            </div>
+          ) : filteredItems.length > 0 ? (
+            <ResourceGrid>
+              {filteredItems.map(item => (
+                <Tile 
+                  key={item.id} 
+                  img={item.img} 
+                  title={item.title} 
+                  sub={item.sub}
+                  type={item.type}
+                  url={item.url}
+                  onClick={(url) => url && window.open(url, '_blank')}
+                />
+              ))}
+            </ResourceGrid>
+          ) : (
+            <div className="no-results">
+              <p>No resources found in this category.</p>
+            </div>
+          )}
         </div>
       </SectionContainer>
 
