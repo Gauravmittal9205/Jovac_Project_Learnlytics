@@ -27,7 +27,7 @@ const corsOptions = {
     }
     
     // In production, only allow specific domains
-    const allowedOrigins = ['http://localhost:3000', 'https://your-production-domain.com'];
+    const allowedOrigins = ['http://localhost:3000', 'https://jovac-project-learnlytics.vercel.app/'];
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
@@ -73,11 +73,11 @@ app.use('/api/hackathons', hackathonRoutes);
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
     // Set static folder
-    app.use(express.static(path.join(__dirname, '../frontend/build')));
+    app.use(express.static(path.join(__dirname, '../Frontend/build')));
 
     // Fix: wildcard route replaced with regex
     app.get(/.*/, (req, res) => {
-        res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+        res.sendFile(path.join(__dirname, '../Frontend/build/index.html'));
     });
 }
 
