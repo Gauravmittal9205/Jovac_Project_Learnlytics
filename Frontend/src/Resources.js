@@ -660,20 +660,80 @@ export default function Resources(){
 
         // Process quizzes
         let quizzes = [];
-        if (quizzesRes.status === 'fulfilled') {
-          quizzes = quizzesRes.value.data.results.slice(0, 4).map((quiz, index) => ({
-            id: `quiz-${index}`,
-            title: `Quiz: ${quiz.category}`,
-            sub: quiz.question.replace(/&[a-z]+;/g, '').substring(0, 100) + '...',
-            img: getFallbackImage('quizzes', index),
-            type: 'quiz',
-            category: 'quizzes',
-            difficulty: quiz.difficulty,
-            answers: [quiz.correct_answer, ...quiz.incorrect_answers],
-            correctAnswer: quiz.correct_answer
-          }));
+        if (quizzesRes.status === 'fulfilled' && quizzesRes.value?.data?.results) {
+          try {
+            quizzes = quizzesRes.value.data.results.slice(0, 4).map((quiz, index) => ({
+              id: `quiz-${index}`,
+              title: `Quiz: ${quiz.category || 'General Knowledge'}`,
+              sub: (quiz.question || '').replace(/&[a-z]+;/g, '').substring(0, 100) + (quiz.question && quiz.question.length > 100 ? '...' : ''),
+              img: getFallbackImage('quizzes', index),
+              type: 'quiz',
+              category: 'quizzes',
+              difficulty: quiz.difficulty || 'medium',
+              answers: quiz.incorrect_answers ? [quiz.correct_answer, ...quiz.incorrect_answers] : [quiz.correct_answer || 'True', 'False'],
+              correctAnswer: quiz.correct_answer || 'True',
+              url: '#'
+            }));
+            console.log('Quizzes loaded successfully:', quizzes);
+          } catch (error) {
+            console.error('Error processing quiz data:', error);
+            // Fallback to default quizzes if there's an error processing the API response
+            quizzes = [
+              {
+                id: 'quiz-fallback-1',
+                title: 'General Knowledge Quiz',
+                sub: 'Test your general knowledge with this fun quiz!',
+                img: getFallbackImage('quizzes', 0),
+                type: 'quiz',
+                category: 'quizzes',
+                difficulty: 'medium',
+                answers: ['Paris', 'London', 'Berlin', 'Madrid'],
+                correctAnswer: 'Paris',
+                url: '#'
+              },
+              {
+                id: 'quiz-fallback-2',
+                title: 'Science & Nature',
+                sub: 'How well do you know science and nature?',
+                img: getFallbackImage('quizzes', 1),
+                type: 'quiz',
+                category: 'quizzes',
+                difficulty: 'medium',
+                answers: ['Oxygen', 'Hydrogen', 'Carbon Dioxide', 'Nitrogen'],
+                correctAnswer: 'Oxygen',
+                url: '#'
+              }
+            ];
+          }
         } else {
-          console.warn('Failed to fetch quizzes:', quizzesRes.reason?.message || 'Unknown error');
+          console.warn('Failed to fetch quizzes:', quizzesRes.reason?.message || 'API response format unexpected');
+          // Fallback to default quizzes if API call fails
+          quizzes = [
+            {
+              id: 'quiz-fallback-1',
+              title: 'General Knowledge Quiz',
+              sub: 'Test your general knowledge with this fun quiz!',
+              img: getFallbackImage('quizzes', 0),
+              type: 'quiz',
+              category: 'quizzes',
+              difficulty: 'medium',
+              answers: ['Paris', 'London', 'Berlin', 'Madrid'],
+              correctAnswer: 'Paris',
+              url: '#'
+            },
+            {
+              id: 'quiz-fallback-2',
+              title: 'Science & Nature',
+              sub: 'How well do you know science and nature?',
+              img: getFallbackImage('quizzes', 1),
+              type: 'quiz',
+              category: 'quizzes',
+              difficulty: 'medium',
+              answers: ['Oxygen', 'Hydrogen', 'Carbon Dioxide', 'Nitrogen'],
+              correctAnswer: 'Oxygen',
+              url: '#'
+            }
+          ];
         }
 
         // Add default hackathons with fallback images

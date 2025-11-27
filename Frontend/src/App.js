@@ -398,7 +398,7 @@ function App() {
                   <ul className="nav-links">
                     <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
                     <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
-                    <li><a href="#pricing"><span className="nav-icon" aria-hidden="true"></span><span>Pricing</span></a></li>
+                    <li><a href="#pricing" className="nav-link"><span className="nav-icon" aria-hidden="true"></span><span>Pricing</span></a></li>
                     <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
                     <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
                   </ul>

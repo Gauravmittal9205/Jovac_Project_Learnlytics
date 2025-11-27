@@ -21,6 +21,7 @@ function OverviewPage() {
   const session = readSession();
    const navigate = useNavigate();
    const [sidebarOpen, setSidebarOpen] = useState(true);
+   const [expandedAnnouncement, setExpandedAnnouncement] = useState(null);
   
 
    useEffect(() => {
@@ -85,6 +86,74 @@ function OverviewPage() {
        },
      ],
    };
+
+   const announcementsData = [
+     {
+       id: 1,
+       type: "urgent",
+       badge: "Urgent",
+       time: "30 mins ago",
+       title: "Mid-term Exam Schedule Updated",
+       shortDesc: "CS301 Mid-term exam has been rescheduled to next Monday due to venue change. Please check your email for details.",
+       fullDetails: {
+         course: "CS301 - Data Structures",
+         newDate: "Monday, December 18, 2024",
+         time: "9:00 AM - 11:00 AM",
+         venue: "Main Auditorium, Block C",
+         reason: "The previous venue is under maintenance. All students must attend at the new location.",
+         instructor: "Dr. Sarah Johnson",
+         contact: "sarah.johnson@university.edu",
+         additionalInfo: "Please bring your student ID card and stationery. Electronic devices are not allowed during the exam."
+       }
+     },
+     {
+       id: 2,
+       type: "info",
+       badge: "Info",
+       time: "2 hours ago",
+       title: "New Learning Resources Available",
+       shortDesc: "Advanced Python tutorials and practice problems have been added to the resource center.",
+       fullDetails: {
+         resources: [
+           "Python Advanced OOP Concepts - 12 video tutorials",
+           "Data Analysis with Pandas - Interactive notebook",
+           "Web Scraping Best Practices - Documentation",
+           "Machine Learning Basics - 50+ practice problems"
+         ],
+         addedBy: "Resource Center Team",
+         category: "Programming & Development",
+         accessLink: "/resources/python-advanced",
+         difficulty: "Intermediate to Advanced",
+         estimatedTime: "15-20 hours of content",
+         additionalInfo: "These resources are curated specifically for students looking to advance their Python skills beyond fundamentals."
+       }
+     },
+     {
+       id: 3,
+       type: "event",
+       badge: "Event",
+       time: "1 day ago",
+       title: "Guest Lecture: AI in Industry",
+       shortDesc: "Join us this Friday for a special guest lecture on AI applications in modern industry.",
+       fullDetails: {
+         speaker: "Dr. Michael Chen",
+         company: "TechCorp AI Solutions",
+         speakerBio: "Chief AI Architect with 15+ years of experience in implementing AI solutions",
+         date: "Friday, December 15, 2024",
+         time: "2:00 PM - 4:00 PM",
+         venue: "University Auditorium",
+         topics: [
+           "Real-world AI implementation challenges",
+           "Machine Learning in production systems",
+           "Career opportunities in AI/ML",
+           "Q&A Session"
+         ],
+         registration: "Registration is mandatory - Limited seats available",
+         benefits: "Attendance certificate will be provided",
+         additionalInfo: "This is a great opportunity to network with industry professionals and learn about practical AI applications."
+       }
+     }
+   ];
 
   const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
   const Colors = ["#8b5cf6"];
@@ -206,83 +275,310 @@ function OverviewPage() {
           <div className="overview-main-grid">
           <div className="overview-left-col">
           <div className="modern-section-card">
-                <h2 className="modern-section-heading">Quick Stat</h2>
-                <div className="finance-cards-grid">
-                  <div className="finance-stat-card">
-                    <div className="finance-icon-wrapper">✅</div>
-                    <div className="finance-details">
-                      <p className="finance-value">95%</p>
-                      <p className="finance-label-text">Attendence</p>
+                <h2 className="modern-section-heading">Quick Stats</h2>
+                <div className="stats-cards-grid">
+                  <div className="stat-card primary">
+                    <div className="stat-icon-wrapper">✅</div>
+                    <div className="stat-details">
+                      <p className="stat-value">95%</p>
+                      <p className="stat-label">Attendance</p>
                     </div>
                   </div>
-                  <div className="finance-stat-card finance-highlighted">
-                    <div className="finance-icon-wrapper">📈</div>
-                    <div className="finance-details">
-                      <p className="finance-value">340</p>
-                      <p className="finance-label-text">Engagement Score</p>
+                  <div className="stat-card secondary">
+                    <div className="stat-icon-wrapper">📈</div>
+                    <div className="stat-details">
+                      <p className="stat-value">340</p>
+                      <p className="stat-label">Engagement Score</p>
                     </div>
                   </div>
-                  <div className="finance-stat-card">
-                    <div className="finance-icon-wrapper">🎯</div>
-                    <div className="finance-details">
-                      <p className="finance-value">89%</p>
-                      <p className="finance-label-text">Quiz Score</p>
+                  <div className="stat-card tertiary">
+                    <div className="stat-icon-wrapper">🎯</div>
+                    <div className="stat-details">
+                      <p className="stat-value">89%</p>
+                      <p className="stat-label">Quiz Score</p>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="modern-section-card">
-                <div className="section-header-with-action">
-                  <h2 className="modern-section-heading">Enrolled Courses</h2>
-                  <button className="see-all-link">See all</button>
-                </div>
-                <div className="enrolled-courses-grid">
-                  <div className="enrolled-course-card">
-                    <div className="course-icon-display" style={{backgroundColor: '#1a7bd9'}}>
-                      💻
-                    </div>
-                    <h3 className="course-card-title">Object oriented programming</h3>
-                    <button className="course-view-button">View</button>
-                  </div>
-                  <div className="enrolled-course-card">
-                    <div className="course-icon-display" style={{backgroundColor: '#16b0a9'}}>
-                      📊
-                    </div>
-                    <h3 className="course-card-title">Fundamentals of database systems</h3>
-                    <button className="course-view-button">View</button>
-                  </div>
-                </div>
-              </div>
-              </div>
-              <div className="overview-left-col">
-              <div className="modern-section-card">
-                <div className="section-header-with-action">
-                  <h2 className="modern-section-heading">Daily notice</h2>
-                  <button className="see-all-link">See all</button>
-                </div>
-                <div className="daily-notices-list">
-                  <div className="notice-list-item">
-                    <h3 className="notice-item-title">Prelim payment due</h3>
-                    <p className="notice-item-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit.</p>
-                    <button className="notice-see-more-btn">See more</button>
-                  </div>
-                  <div className="notice-list-item">
-                    <h3 className="notice-item-title">Exam schedule</h3>
-                    <p className="notice-item-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit.</p>
-                    <button className="notice-see-more-btn">See more</button>
-                  </div>
-                </div>
-                </div>
-                </div>
-              
               </div>
               
-          
-
-         
-
-          {/* Enhanced Recommendations Section */}
-<div className="dashboard-section">
+              <div className="modern-section-card">
+                <div className="section-header-with-action">
+                  <h2 className="modern-section-heading">Recent Activity</h2>
+                  <button className="see-all-link">View all</button>
+                </div>
+                <div className="activity-list">
+                  <div className="activity-item">
+                    <div className="activity-icon">📝</div>
+                    <div className="activity-content">
+                      <h4>Assignment Submitted</h4>
+                      <p>Data Structures - Week 5 Assignment</p>
+                      <span className="activity-time">2 hours ago</span>
+                    </div>
+                  </div>
+                  <div className="activity-item">
+                    <div className="activity-icon">🎥</div>
+                    <div className="activity-content">
+                      <h4>Lecture Watched</h4>
+                      <p>Algorithm Design - Lecture 12</p>
+                      <span className="activity-time">5 hours ago</span>
+                    </div>
+                  </div>
+                  <div className="activity-item">
+                    <div className="activity-icon">🏆</div>
+                    <div className="activity-content">
+                      <h4>Quiz Completed</h4>
+                      <p>Database Systems - SQL Fundamentals</p>
+                      <span className="activity-time">1 day ago</span>
+                    </div>
+                  </div>
+                  <div className="activity-item">
+                    <div className="activity-icon">💬</div>
+                    <div className="activity-content">
+                      <h4>Forum Post</h4>
+                      <p>Replied to "Help with Recursion"</p>
+                      <span className="activity-time">2 days ago</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="modern-section-card">
+                <div className="section-header-with-action">
+                  <h2 className="modern-section-heading">Quick Actions</h2>
+                </div>
+                <div className="quick-actions-grid">
+                  <button 
+                    className="quick-action-btn primary-action"
+                    onClick={() => navigate('/academic-performance')}
+                  >
+                    <span className="action-icon">📝</span>
+                    <span className="action-text">Submit Assignment</span>
+                  </button>
+                  <button 
+                    className="quick-action-btn secondary-action"
+                    onClick={() => navigate('/Studentresources')}
+                  >
+                    <span className="action-icon">📚</span>
+                    <span className="action-text">Browse Resources</span>
+                  </button>
+                  <button 
+                    className="quick-action-btn tertiary-action"
+                    onClick={() => navigate('/help')}
+                  >
+                    <span className="action-icon">💬</span>
+                    <span className="action-text">Ask Question</span>
+                  </button>
+                  <button 
+                    className="quick-action-btn quaternary-action"
+                    onClick={() => navigate('/course-analysis')}
+                  >
+                    <span className="action-icon">📊</span>
+                    <span className="action-text">View Progress</span>
+                  </button>
+                </div>
+              </div>
+              </div>
+              <div className="overview-right-col">
+              <div className="modern-section-card">
+                <div className="section-header-with-action">
+                  <h2 className="modern-section-heading">Announcements</h2>
+                  <button className="see-all-link">See all</button>
+                </div>
+                <div className="announcements-list">
+                  {announcementsData.map((announcement) => (
+                    <div 
+                      key={announcement.id}
+                      className={`announcement-item ${announcement.type} ${expandedAnnouncement === announcement.id ? 'expanded' : ''}`}
+                      onClick={() => setExpandedAnnouncement(expandedAnnouncement === announcement.id ? null : announcement.id)}
+                    >
+                      <div className="announcement-header">
+                        <span className={`announcement-badge ${announcement.type}`}>{announcement.badge}</span>
+                        <span className="announcement-time">{announcement.time}</span>
+                      </div>
+                      <h4>{announcement.title}</h4>
+                      <p className="announcement-short-desc">{announcement.shortDesc}</p>
+                      
+                      {expandedAnnouncement === announcement.id && (
+                        <div className="announcement-details">
+                          <div className="details-divider"></div>
+                          
+                          {announcement.type === 'urgent' && (
+                            <div className="details-content">
+                              <div className="detail-row">
+                                <strong>📚 Course:</strong>
+                                <span>{announcement.fullDetails.course}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>📅 New Date:</strong>
+                                <span>{announcement.fullDetails.newDate}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>⏰ Time:</strong>
+                                <span>{announcement.fullDetails.time}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>📍 Venue:</strong>
+                                <span>{announcement.fullDetails.venue}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>💡 Reason:</strong>
+                                <span>{announcement.fullDetails.reason}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>👨‍🏫 Instructor:</strong>
+                                <span>{announcement.fullDetails.instructor}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>📧 Contact:</strong>
+                                <span>{announcement.fullDetails.contact}</span>
+                              </div>
+                              <div className="detail-note">
+                                <strong>Note:</strong> {announcement.fullDetails.additionalInfo}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {announcement.type === 'info' && (
+                            <div className="details-content">
+                              <div className="detail-row">
+                                <strong>📂 Category:</strong>
+                                <span>{announcement.fullDetails.category}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>📊 Difficulty:</strong>
+                                <span>{announcement.fullDetails.difficulty}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>⏱️ Estimated Time:</strong>
+                                <span>{announcement.fullDetails.estimatedTime}</span>
+                              </div>
+                              <div className="detail-section">
+                                <strong>📚 Available Resources:</strong>
+                                <ul className="resources-list">
+                                  {announcement.fullDetails.resources.map((resource, idx) => (
+                                    <li key={idx}>{resource}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="detail-row">
+                                <strong>👥 Added by:</strong>
+                                <span>{announcement.fullDetails.addedBy}</span>
+                              </div>
+                              <div className="detail-note">
+                                <strong>Info:</strong> {announcement.fullDetails.additionalInfo}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {announcement.type === 'event' && (
+                            <div className="details-content">
+                              <div className="detail-row">
+                                <strong>🎤 Speaker:</strong>
+                                <span>{announcement.fullDetails.speaker}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>🏢 Company:</strong>
+                                <span>{announcement.fullDetails.company}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>📅 Date:</strong>
+                                <span>{announcement.fullDetails.date}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>⏰ Time:</strong>
+                                <span>{announcement.fullDetails.time}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>📍 Venue:</strong>
+                                <span>{announcement.fullDetails.venue}</span>
+                              </div>
+                              <div className="detail-section">
+                                <strong>📋 Topics Covered:</strong>
+                                <ul className="resources-list">
+                                  {announcement.fullDetails.topics.map((topic, idx) => (
+                                    <li key={idx}>{topic}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="detail-row">
+                                <strong>📝 Registration:</strong>
+                                <span>{announcement.fullDetails.registration}</span>
+                              </div>
+                              <div className="detail-row">
+                                <strong>🎁 Benefits:</strong>
+                                <span>{announcement.fullDetails.benefits}</span>
+                              </div>
+                              <div className="detail-note">
+                                <strong>About Speaker:</strong> {announcement.fullDetails.speakerBio}
+                              </div>
+                              <div className="detail-note">
+                                {announcement.fullDetails.additionalInfo}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="details-footer">
+                            <span className="click-hint">Click again to close</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {expandedAnnouncement !== announcement.id && (
+                        <div className="announcement-click-hint">
+                          <span>Click to view more details →</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="modern-section-card">
+                <div className="section-header-with-action">
+                  <h2 className="modern-section-heading">Upcoming Events</h2>
+                  <button className="see-all-link">Calendar</button>
+                </div>
+                <div className="events-list">
+                  <div className="event-item">
+                    <div className="event-date">
+                      <span className="date-day">15</span>
+                      <span className="date-month">Dec</span>
+                    </div>
+                    <div className="event-content">
+                      <h4>Mid-term Exam</h4>
+                      <p>CS301 - Data Structures</p>
+                      <span className="event-time">9:00 AM - 11:00 AM</span>
+                    </div>
+                  </div>
+                  <div className="event-item">
+                    <div className="event-date">
+                      <span className="date-day">17</span>
+                      <span className="date-month">Dec</span>
+                    </div>
+                    <div className="event-content">
+                      <h4>Assignment Due</h4>
+                      <p>CS201 - Programming Fundamentals</p>
+                      <span className="event-time">11:59 PM</span>
+                    </div>
+                  </div>
+                  <div className="event-item">
+                    <div className="event-date">
+                      <span className="date-day">18</span>
+                      <span className="date-month">Dec</span>
+                    </div>
+                    <div className="event-content">
+                      <h4>Guest Lecture</h4>
+                      <p>AI in Modern Industry</p>
+                      <span className="event-time">2:00 PM - 4:00 PM</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+              </div>
+              
+              {/* Enhanced Recommendations Section */}
+              <div className="dashboard-section">
   <div className="section-header">
     <h2 className="section-title">Suggested for You</h2>
     <p className="section-subtitle">Personalized recommendations based on your learning goals</p>
@@ -353,8 +649,8 @@ function OverviewPage() {
     ))}
   </div>
 </div>
-        </div>
       </div>
+    </div>
     </div>
     
   );
