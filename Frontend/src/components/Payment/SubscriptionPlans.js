@@ -291,13 +291,13 @@ const ModalOverlay = styled.div`
 const ModalContent = styled.div`
   background: white;
   border-radius: 12px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 500px;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 600px;
   position: relative;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 `;
 
 const CloseButton = styled.button`

@@ -269,7 +269,7 @@ function App() {
                     <ul className="nav-links">
                       <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
                       <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
-                      <li><a href="#pricing"><span className="nav-icon" aria-hidden="true"></span><span>Pricing</span></a></li>
+                      
                       <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
                       <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
                     </ul>
@@ -398,7 +398,7 @@ function App() {
                   <ul className="nav-links">
                     <li><Link to="/about"><span className="nav-icon" aria-hidden="true"></span><span>About</span></Link></li>
                     <li><Link to="/resources"><span className="nav-icon" aria-hidden="true"></span><span>Resources</span></Link></li>
-                    <li><a href="#pricing"><span className="nav-icon" aria-hidden="true"></span><span>Pricing</span></a></li>
+                    <li><a href="#pricing" className="nav-link"><span className="nav-icon" aria-hidden="true"></span><span>Pricing</span></a></li>
                     <li><Link to="/contact"><span className="nav-icon" aria-hidden="true"></span><span>Contact</span></Link></li>
                     <li><Link to="/help"><span className="nav-icon" aria-hidden="true"></span><span>Help</span></Link></li>
                   </ul>
@@ -664,10 +664,12 @@ function RegisterPage(){
     setIsLoading(true);
 
     try {
+      console.log('Sending registration request to:', `${API_URL}/register`);
       const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
           name: name.trim(),
@@ -677,10 +679,22 @@ function RegisterPage(){
         })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Error parsing JSON response:', jsonError);
+        throw new Error('Invalid response from server. Please try again.');
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+        console.error('Registration failed:', data);
+        throw new Error(data.message || data.error || `Registration failed with status ${response.status}`);
+      }
+
+      if (!data.token || !data.user) {
+        console.error('Invalid response format:', data);
+        throw new Error('Invalid response from server');
       }
 
       // Save the token and user data in session
@@ -689,7 +703,7 @@ function RegisterPage(){
         email: data.user.email,
         role: data.user.role,
         name: data.user.name,
-        id: data.user.id
+        id: data.user.id || data.user._id
       });
 
       setSuccess('Account created successfully! Redirecting...');
@@ -704,7 +718,8 @@ function RegisterPage(){
       }, 1500);
       
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please check your details and try again.');
     } finally {
       setIsLoading(false);
     }

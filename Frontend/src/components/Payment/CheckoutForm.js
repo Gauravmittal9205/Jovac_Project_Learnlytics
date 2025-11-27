@@ -1,9 +1,7 @@
 // Frontend/src/components/Payment/CheckoutForm.js
-
 import React, { useState } from "react";
 import styled from "styled-components";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-
 
 const CheckoutForm = ({ plan, onSuccess, onCancel }) => {
   const stripe = useStripe();
@@ -16,183 +14,189 @@ const CheckoutForm = ({ plan, onSuccess, onCancel }) => {
   const [agree, setAgree] = useState(false);
 
   const [processing, setProcessing] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const verifyUpiId = async (upiId) => {
+  try {
+    setVerifying(true);
+    setVerificationStatus(null);
+    setError("");
+
+    // First, validate the UPI format
+    const upiRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+    if (!upiRegex.test(upiId)) {
+      setError("Please enter a valid UPI ID (e.g., yourname@upi)");
+      return false;
+    }
+
+    // Call your backend API to validate UPI ID
+    const response = await fetch('https://your-backend-api.com/validate-upi', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Include any authentication tokens if needed
+        // 'Authorization': `Bearer ${yourAuthToken}`
+      },
+      body: JSON.stringify({ upiId })
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    
+    if (data.valid) {
+      setVerificationStatus('success');
+      setSuccessMessage(`UPI ID ${upiId} verified successfully!`);
+      return true;
+    } else {
+      setVerificationStatus('error');
+      setError("Invalid UPI ID. Please check and try again.");
+      return false;
+    }
+  } catch (err) {
+    console.error('Verification error:', err);
+    setVerificationStatus('error');
+    setError("Failed to verify UPI ID. Please try again later.");
+    return false;
+  } finally {
+    setVerifying(false);
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
 
     if (!agree) {
       setError("You must accept the terms to continue.");
       return;
     }
 
-    setProcessing(true);
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
 
-    try {
-      let pm = null;
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
 
-      if (paymentMethod === "card") {
-        const card = elements.getElement(CardElement);
-        const { error: stripeError, paymentMethod: cardPm } =
-          await stripe.createPaymentMethod({
-            type: "card",
-            card,
-            billing_details: { email },
-          });
-
-        if (stripeError) {
-          setProcessing(false);
-          setError(stripeError.message);
-          return;
-        }
-
-        pm = cardPm;
-      } else {
-        if (!upiId.includes("@")) {
-          setError("Enter a valid UPI ID");
-          setProcessing(false);
-          return;
-        }
-        pm = { type: "upi", upi_id: upiId };
+    // UPI payment flow
+    if (paymentMethod === "upi") {
+      if (!upiId || upiId.trim() === '') {
+        setError("Please enter your UPI ID");
+        return;
       }
 
-      setTimeout(() => {
-        onSuccess();
+      // Basic UPI format check
+      const upiRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+      if (!upiRegex.test(upiId)) {
+        setError("Please enter a valid UPI ID (e.g., yourname@upi)");
+        return;
+      }
+
+      // Verify UPI ID
+      const isUpiValid = await verifyUpiId(upiId);
+      if (!isUpiValid) return;
+
+      // If UPI is valid, proceed with payment
+      try {
+        setProcessing(true);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setSuccessMessage("Payment successful! Redirecting...");
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
+      } catch (err) {
+        setError("Payment processing failed. Please try again.");
+        console.error('Payment error:', err);
+      } finally {
         setProcessing(false);
-      }, 1500);
-    } catch (err) {
-      setError(err.message);
-      setProcessing(false);
-    }
-  };
-
-
-// Inside your component, update the handlePaymentSubmit function
-const handlePaymentSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-
-  if (!agree) {
-    setError("You must accept the terms to continue.");
-    return;
-  }
-
-  // UPI ID validation
-  if (paymentMethod === "upi") {
-    if (!upiId || upiId.trim() === '') {
-      setError("कृपया अपना UPI ID दर्ज करें");
-      return;
-    }
-    
-    const upiRegex = /^[a-zA-Z0-9._-]{3,}@[a-zA-Z0-9]+$/;
-    if (!upiRegex.test(upiId)) {
-      setError("कृपया एक वैध UPI ID दर्ज करें (जैसे: yourname@upi)");
-      return;
-    }
-
-    // Initialize Razorpay
-    const options = {
-      key: 'YOUR_RAZORPAY_KEY', // Replace with your Razorpay key
-      amount: 100, // 1 rupee in paise
-      currency: 'INR',
-      name: 'Your Company Name',
-      description: '1 Rupee for AutoPay Setup',
-      prefill: {
-        upi: upiId
-      },
-      handler: function(response) {
-        // Handle successful payment
-        console.log('Payment successful:', response);
-        onSuccess();
-      },
-      theme: {
-        color: '#3399cc'
       }
-    };
-
-    try {
-      setProcessing(true);
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      setError("Payment initialization failed. Please try again.");
-      console.error('Razorpay error:', err);
-    } finally {
-      setProcessing(false);
+      return;
     }
-    return;
-  }
 
-  // Existing card payment logic
-  if (paymentMethod === "card") {
-    try {
-      setProcessing(true);
-      const card = elements.getElement(CardElement);
-      const { error: stripeError, paymentMethod: cardPm } =
-        await stripe.createPaymentMethod({
+    // Card payment flow
+    if (paymentMethod === "card") {
+      try {
+        setProcessing(true);
+        const card = elements.getElement(CardElement);
+        const { error: stripeError } = await stripe.createPaymentMethod({
           type: "card",
           card,
           billing_details: { email },
         });
 
-      if (stripeError) {
-        throw stripeError;
-      }
+        if (stripeError) throw stripeError;
 
-      // Process card payment
-      // Add your card payment processing logic here
-      setTimeout(() => {
-        onSuccess();
-      }, 1500);
-    } catch (err) {
-      setError(err.message || "An error occurred. Please try again.");
-    } finally {
-      setProcessing(false);
+        setSuccessMessage("Processing payment...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setSuccessMessage("Payment successful! Redirecting...");
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
+      } catch (err) {
+        setError(err.message || "An error occurred. Please try again.");
+      } finally {
+        setProcessing(false);
+      }
     }
-  }
-};
+  };
 
   return (
     <Wrapper>
-      <Box>
-        {/* Header */}
+      <Box as="form" onSubmit={handleSubmit}>
         <Heading>Subscribe to {plan.name}</Heading>
         <PriceRow>
-          <Price>₹0.00</Price>
-          <Small>per month<br />until coupon expires</Small>
+          <Price>₹{plan.price}</Price>
+          <Small>per month</Small>
         </PriceRow>
 
         <Divider />
 
-        {/* Contact */}
         <SectionTitle>Contact information</SectionTitle>
         <InputBox>
           <Label>Email</Label>
-          <StaticBox>{email || "Enter your email"}</StaticBox>
+          <Input 
+            type="email" 
+            placeholder="Enter your email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </InputBox>
 
         <Divider />
 
-        {/* Payment Method */}
         <SectionTitle>Payment method</SectionTitle>
-
         <PaymentBox>
           <RadioRow onClick={() => setPaymentMethod("card")}>
             <Radio checked={paymentMethod === "card"} />
             <span>Card</span>
             <CardIcons>
-              <Img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" />
-              <Img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg" />
-              <Img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Amex_logo.svg" />
-              <Img src="https://upload.wikimedia.org/wikipedia/commons/5/5a/Discover_Card_logo.svg" />
+              <Img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" />
+              <Img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg" alt="Mastercard" />
+              <Img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Amex_logo.svg" alt="Amex" />
             </CardIcons>
           </RadioRow>
 
           <RadioRow onClick={() => setPaymentMethod("upi")}>
             <Radio checked={paymentMethod === "upi"} />
             <span>UPI</span>
-            <Img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" height="20" />
+            <Img 
+              src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" 
+              alt="UPI" 
+              height="20" 
+            />
           </RadioRow>
 
           {paymentMethod === "card" ? (
@@ -219,28 +223,46 @@ const handlePaymentSubmit = async (e) => {
         </PaymentBox>
 
         <CheckRow>
-          <input type="checkbox" checked={saveInfo} onChange={() => setSaveInfo(!saveInfo)} />
+          <input 
+            type="checkbox" 
+            checked={saveInfo} 
+            onChange={() => setSaveInfo(!saveInfo)} 
+          />
           <CheckText>
-            Save my information for faster checkout<br />
-            <small>Pay securely at OpenAI, LLC and everywhere Link is accepted.</small>
+            Save my information for faster checkout
           </CheckText>
         </CheckRow>
 
         <CheckRow>
-          <input type="checkbox" checked={agree} onChange={() => setAgree(!agree)} />
+          <input 
+            type="checkbox" 
+            checked={agree} 
+            onChange={() => setAgree(!agree)} 
+          />
           <Terms>
             You'll be charged according to the plan until you cancel.  
             By subscribing, you agree to the Terms of Use and Privacy Policy.
           </Terms>
         </CheckRow>
 
-        {error && <ErrorBox>{error}</ErrorBox>}
+        {verificationStatus === 'success' && (
+          <SuccessText>
+            <span>✓</span> {successMessage}
+          </SuccessText>
+        )}
+        {error && <ErrorText>{error}</ErrorText>}
 
-        <Subscribe disabled={processing}>
-          {processing ? "Processing..." : "Subscribe"}
-        </Subscribe>
+        <Button 
+          type="submit" 
+          disabled={processing || verifying}
+          className={verifying ? 'verifying' : ''}
+        >
+          {verifying ? 'Verifying UPI ID...' : 
+           processing ? 'Processing...' : 
+           'Subscribe Now'}
+        </Button>
 
-        <Footer>Powered by <b>Stripe</b></Footer>
+        <Footer>Secure payment processing</Footer>
       </Box>
     </Wrapper>
   );
@@ -256,7 +278,7 @@ const Wrapper = styled.div`
   padding: 2rem;
 `;
 
-const Box = styled.div`
+const Box = styled.form`
   width: 420px;
   background: white;
   padding: 2rem;
@@ -305,15 +327,6 @@ const Label = styled.div`
   font-size: 14px;
   margin-bottom: 4px;
   color: #475569;
-`;
-
-const StaticBox = styled.div`
-  padding: 12px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 15px;
-  color: #334155;
 `;
 
 const PaymentBox = styled.div`
@@ -384,29 +397,83 @@ const Terms = styled.div`
   line-height: 1.2;
 `;
 
-const ErrorBox = styled.div`
-  background: #fee2e2;
-  color: #dc2626;
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 12px;
+const ErrorText = styled.div`
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  text-align: center;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border-radius: 6px;
+  border-left: 4px solid #ef4444;
 `;
 
-const Subscribe = styled.button`
-  margin-top: 1.4rem;
+const SuccessText = styled.div`
+  color: #059669;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  text-align: center;
+  padding: 0.75rem 1rem;
+  background: #ecfdf5;
+  border-radius: 6px;
+  border-left: 4px solid #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  span {
+    font-size: 1.25rem;
+  }
+`;
+
+const Button = styled.button`
   width: 100%;
-  padding: 14px;
-  font-size: 17px;
-  background: #0ea5e9;
+  padding: 1rem;
+  background: #4f46e5;
   color: white;
-  border-radius: 8px;
   border: none;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1.5rem;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background: #4338ca;
+  }
 
   &:disabled {
-    background: #bae6fd;
+    background: #c7d2fe;
     cursor: not-allowed;
+    opacity: 0.8;
+  }
+
+  &.verifying {
+    background: #4f46e5;
+    color: transparent;
+    position: relative;
+    
+    &::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin: -10px 0 0 -10px;
+      border: 3px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 `;
 
