@@ -71,15 +71,15 @@ app.use('/api/hackathons', hackathonRoutes);
 
 // Serve static assets in production
 // Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
-    // Set static folder
-    app.use(express.static(path.join(__dirname, '../Frontend/build')));
+// if (process.env.NODE_ENV === 'production') {
+//     // Set static folder
+//     app.use(express.static(path.join(__dirname, '../Frontend/build')));
 
-    // Fix: wildcard route replaced with regex
-    app.get(/.*/, (req, res) => {
-        res.sendFile(path.join(__dirname, '../Frontend/build/index.html'));
-    });
-}
+//     // Fix: wildcard route replaced with regex
+//     app.get(/.*/, (req, res) => {
+//         res.sendFile(path.join(__dirname, '../Frontend/build/index.html'));
+//     });
+// }
 
 // Error handling middleware
 app.use((err, req, res, next) => {
