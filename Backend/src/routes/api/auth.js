@@ -3,19 +3,13 @@ const router = express.Router();
 const { register, login, getCurrentUser } = require('../../controllers/authController');
 const { authenticate } = require('../../middleware/auth');
 
-// @route   POST api/auth/register
-// @desc    Register a new user
-// @access  Public
-router.post('https://jovacprojectlearnlytics-production.up.railway.app/api/auth/register', register);
+// POST /api/auth/register
+router.post('/register', register);
 
-// @route   POST api/auth/login
-// @desc    Login user and get token
-// @access  Public
-router.post('https://jovacprojectlearnlytics-production.up.railway.app/api/auth/login', login);
+// POST /api/auth/login
+router.post('/login', login);
 
-// @route   GET api/auth/me
-// @desc    Get current user data
-// @access  Private
-router.get('https://jovacprojectlearnlytics-production.up.railway.app/api/auth/me', authenticate, getCurrentUser);
+// GET /api/auth/me
+router.get('/me', authenticate, getCurrentUser);
 
 module.exports = router;
