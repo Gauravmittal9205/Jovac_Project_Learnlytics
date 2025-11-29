@@ -28,7 +28,7 @@ const corsOptions = {
     }
     
     // In production, only allow specific domains
-    const allowedOrigins = ['http://localhost:3000', 'https://jovac-project-learnlytics.vercel.app/'];
+    const allowedOrigins = ['https://jovac-project-learnlytics-hlml.vercel.app/'];
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
@@ -111,7 +111,7 @@ app.use((err, req, res, next) => {
     });
 });
 app.use(cors({
-  origin: "https://jovac-project-learnlytics-bd8g.vercel.app/",
+  origin: "https://jovac-project-learnlytics-hlml.vercel.app/",
   credentials: true
 }));
 app.get("/", (req, res) => {
