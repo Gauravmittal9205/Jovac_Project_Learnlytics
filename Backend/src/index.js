@@ -37,11 +37,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// FIX FOR EXPRESS 5 — NO "*" ALLOWED
-app.options('/api/*', cors(corsOptions));
-app.options('/', cors(corsOptions));
-
+app.options('*', cors(corsOptions));
 
 
 // Log all incoming requests
