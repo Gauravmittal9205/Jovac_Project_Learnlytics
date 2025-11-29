@@ -16,27 +16,32 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0";
 
+// ===== CORS FIX FOR EXPRESS v5 =====
 const allowedOrigins = [
   "https://jovac-project-learnlytics-eb1q.vercel.app"
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow mobile apps / Postman
-
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log("❌ Blocked by CORS:", origin);
+      console.log("❌ CORS blocked:", origin);
       callback(new Error("CORS Not Allowed"), false);
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"]
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Required for preflight
+
+// FIX FOR EXPRESS 5 — NO "*" ALLOWED
+app.options('/api/*', cors(corsOptions));
+app.options('/', cors(corsOptions));
+
 
 
 
