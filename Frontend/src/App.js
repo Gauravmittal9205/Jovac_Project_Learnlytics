@@ -665,7 +665,7 @@ function RegisterPage(){
 
     try {
       console.log('Sending registration request to:', `${API_URL}/register`);
-      const response = await fetch('https://jovacprojectlearnlytics-production.up.railway.app/register'), {
+      const response = await fetch('https://jovacprojectlearnlytics-production.up.railway.app/api/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
