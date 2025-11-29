@@ -34,6 +34,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 
 // Log all incoming requests
 app.use((req, res, next) => {
