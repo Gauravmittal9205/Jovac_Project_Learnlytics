@@ -17,24 +17,27 @@ const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0";
 
 const allowedOrigins = [
-  'https://jovac-project-learnlytics-eb1q.vercel.app/'
+  "https://jovac-project-learnlytics-eb1q.vercel.app"
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // allow mobile apps / Postman
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log("❌ Blocked by CORS:", origin);
       callback(new Error("CORS Not Allowed"), false);
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options("*", cors(corsOptions)); // Required for preflight
+
 
 
 // Log all incoming requests
