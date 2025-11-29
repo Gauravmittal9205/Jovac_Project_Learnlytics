@@ -110,6 +110,10 @@ app.use((err, req, res, next) => {
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
 });
+app.use(cors({
+  origin: "https://jovac-project-learnlytics.vercel.app/",
+  credentials: true
+}));
 app.get("/", (req, res) => {
   res.send("Backend Running");
 });
