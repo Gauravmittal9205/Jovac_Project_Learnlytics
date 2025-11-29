@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0";
 
 const allowedOrigins = [
-  'https://jovac-project-learnlytics-hlml.vercel.app'
+  'https://jovac-project-learnlytics-eb1q.vercel.app/'
 ];
 
 const corsOptions = {
