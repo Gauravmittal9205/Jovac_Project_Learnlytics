@@ -14,6 +14,7 @@ const hackathonRoutes = require('./routes/api/hackathons');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = "0.0.0.0";
 
 // Configure CORS with credentials support
 const corsOptions = {
@@ -111,6 +112,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running on http://${HOST}:${PORT}`);
 });
