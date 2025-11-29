@@ -111,7 +111,7 @@ app.use((err, req, res, next) => {
     });
 });
 app.use(cors({
-  origin: "https://jovac-project-learnlytics.vercel.app/",
+  origin: "https://jovac-project-learnlytics-bd8g.vercel.app/",
   credentials: true
 }));
 app.get("/", (req, res) => {
