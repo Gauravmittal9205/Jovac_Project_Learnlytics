@@ -37,7 +37,7 @@ const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
 
 // Auth helpers
 export const SESSION_KEY = 'learnlytics_session';
-export const API_URL = 'http://localhost:5000/api/auth';
+export const API_URL = 'https://jovacprojectlearnlytics-production.up.railway.app//api/auth';
 
 export function readSession(){
   try { 
