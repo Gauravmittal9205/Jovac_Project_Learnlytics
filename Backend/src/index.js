@@ -110,7 +110,9 @@ app.use((err, req, res, next) => {
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
 });
-
+app.get("/", (req, res) => {
+  res.send("Backend Running");
+});
 // Start the server
 app.listen(PORT, HOST, () => {
   console.log(`Server running on http://${HOST}:${PORT}`);
