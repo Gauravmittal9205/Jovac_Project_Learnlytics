@@ -16,30 +16,23 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0";
 
-// Configure CORS with credentials support
+const allowedOrigins = [
+  'https://jovac-project-learnlytics-bd8g.vercel.app'
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    // Allow all origins for development
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS Not Allowed"), false);
     }
-    
-    // In production, only allow specific domains
-    const allowedOrigins = ['https://jovac-project-learnlytics-hlml.vercel.app'];
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
   },
-  credentials: true,
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  credentials: true
 };
 
-// Middleware
 app.use(cors(corsOptions));
 
 // Log all incoming requests
