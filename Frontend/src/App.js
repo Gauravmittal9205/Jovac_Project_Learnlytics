@@ -535,7 +535,7 @@ function LoginPage(){
 
     try {
       console.log('1. Sending login request to server...');
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('https://jovacprojectlearnlytics-production.up.railway.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -665,7 +665,7 @@ function RegisterPage(){
 
     try {
       console.log('Sending registration request to:', `${API_URL}/register`);
-      const response = await fetch(`${API_URL}/register`, {
+      const response = await fetch('https://jovacprojectlearnlytics-production.up.railway.app/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
